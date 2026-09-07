@@ -275,16 +275,25 @@ def main():
         heading_ok = (idx is not None and idx > 0
                       and cells[idx - 1]["cell_type"] == "markdown"
                       and "".join(cells[idx - 1]["source"]).lstrip().startswith("## Setup"))
-        merged_ok = (idx is not None
-                     and (idx + 1 >= len(cells) or cells[idx + 1]["cell_type"] != "code"))
+        # NOTE: whether a code cell follows the setup cell is deliberately NOT a
+        # condition here, though this tool absorbs one when it can.
+        #
+        # It was, briefly, and it made the tool non-convergent: `--check` failed
+        # on 18_power_flow_and_lmp because the cell below is imports PLUS solver
+        # configuration PLUS a print, which the absorb correctly refuses to
+        # swallow -- so the writer could not fix what the checker demanded, and
+        # CI could never go green. A check that reports a state its own writer
+        # cannot reach is a broken check, not a finding.
+        #
+        # An orphaned code cell is a Part 3 question and `md-above-code` in
+        # tools/check_notebooks.py is where it is reported.
 
-        if cell_ok and heading_ok and merged_ok:
+        if cell_ok and heading_ok:
             continue
 
         why = ("setup cell missing" if idx is None
                else "setup cell differs" if not cell_ok
-               else "no markdown heading above the setup cell" if not heading_ok
-               else "a code cell sits directly below the setup cell (orphan)")
+               else "no markdown heading above the setup cell")
         problems.append(rel + ": " + why)
         if args.check:
             continue
