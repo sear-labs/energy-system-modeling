@@ -1,0 +1,128 @@
+# ---------------------------------------------------------------------------
+# Never publishable. These patterns are the reason this repository has fresh
+# history rather than a filter of the course folder it came from: the course
+# folder tracks live exam banks and an in-progress manuscript, and git history
+# is permanent. See CLAUDE.md Part 11.
+#
+# Each rule says WHY next to it. A rule whose reason is not written down is a
+# rule somebody deletes the first time it is inconvenient.
+# ---------------------------------------------------------------------------
+
+# Exams and question banks -- live for a course being taught now. Publishing
+# retires them, which is a cost to the course, not a privacy problem.
+#
+# These patterns are DELIBERATELY not `*exam*`. That form matches "example",
+# and would have silently dropped build_sb1_example_notebook.py -- a builder
+# this repository needs. Verified with `git check-ignore -v` in both
+# directions; see tests/test_gitignore.py, which keeps it verified.
+Exams/
+exams/
+exam_*
+*_exam
+*_exam.*
+*_exam_*
+*-exam-*
+mini-exam*
+Mini-Exam*
+*question_bank*
+*Question Bank*
+*.qti
+*.qti.zip
+text2qti*
+to_text2qti*
+
+# Rubrics and grading instruments. Generated from build_rubrics.py in the
+# course folder, which stays there along with everything that reads it.
+rubric*
+Rubric*
+*_rubric*
+*_rubrics*
+*Rubric Import*
+build_rubrics*
+export_to_canvas_rubrics*
+abet_align*
+
+# Quizzes, including the Canvas backup that carries full question content.
+quiz*
+Quiz*
+*_quiz*
+*_quizzes*
+
+# The CARES Book manuscript. An in-progress open textbook whose publication is
+# its author's decision and not a side effect of shipping notebooks.
+CARES Book/
+CARES_Book/
+*Manuscript/
+build_book_edits*
+
+# Student work of any kind. Education-record adjacent even with no name on it:
+# the standard's never-publish list covers consolidated observations about
+# students, whether or not a name is attached.
+*roster*
+*Roster*
+gradebook*
+Gradebook*
+*_grades*
+*submission*
+*Submission*
+students/
+Student Work/
+
+# Canvas tooling and anything it emits. The token is read from the environment,
+# but a cached response or a dry-run log can carry course and account detail.
+canvas_*
+*canvas*.json
+*.canvas
+
+# Credentials. Never committed; a credential in history means rotating the
+# credential, not amending the commit.
+.env
+.env.*
+*.lic
+*_key*
+*_secret*
+*_token*
+gurobi.lic
+
+# Slide decks and third-party binaries. Git stores them badly and history is
+# permanent, so a large binary committed once is carried forever.
+*.pptx
+*.potx
+*.docx
+*.dotx
+*.xlsx
+*.pdf
+UTA Slides/
+Resources/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# Tooling and OS
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------------------
+# Deliberately NOT ignored, and why (Part 1 rule 5 asks for this in writing):
+#   notebooks/**/*.ipynb WITH OUTPUTS -- Part 5 "ship it executed". A reader
+#     without a solver licence still sees what the prose refers to.
+#   data/raw/*.csv        -- the instance tables both the notebook and the
+#     package read. Part 4: nothing else can prove the two sides agree.
+#   data/vendor/*         -- third-party data, each with a licence sidecar.
+# ---------------------------------------------------------------------------

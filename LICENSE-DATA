@@ -1,0 +1,46 @@
+# Licences, by path
+
+`LICENSE` is MIT and speaks about *the Software*. It says nothing about a
+database right, so the tables a reader is invited to edit, the prose they read,
+and the third-party series vendored under `data/vendor/` are the parts of this
+repository whose terms would otherwise be unstated. This file states them.
+
+Two documents claiming the same files is worse than one, so nothing below
+overlaps: every path in this repository is covered by exactly one row.
+
+| path | licence | why |
+|---|---|---|
+| `src/`, `tools/`, `tests/`, `pyproject.toml` | **MIT** (see `LICENSE`) | source code |
+| `notebooks/**/*.ipynb` | **CC BY 4.0** | the notebooks are prose with code in them, and they are the book's companion — the book is CC BY, so the companion matches it |
+| `README.md`, `CLAUDE.md`, `ENERGY_SERIES_PLAN.md`, every `README.md` under `notebooks/` | **CC BY 4.0** | prose |
+| committed figures and cell outputs inside the notebooks | **CC BY 4.0** | they travel with the notebook that produced them |
+| `data/raw/**` | **CC0 1.0** | authored instance tables. A reader is told to edit these and re-run; attribution conditions on a table of made-up generator costs would be friction with no benefit |
+| `data/vendor/**` | **each file's own licence** | third-party. Never CC0, never assumed — see below |
+
+## The book
+
+The companion notebooks accompany *Introduction to Energy System Modeling* by
+Erick C. Jones, Jr., published open access under CC BY 4.0 at
+<https://uta.pressbooks.pub/energysystemmodeling>. Matching the book's licence
+on the prose is deliberate: a reader who may adapt a chapter may adapt the
+notebook that goes with it.
+
+## Vendored data is not covered by anything in this repository
+
+Every file under `data/vendor/` keeps the licence it arrived with, and carries a
+sidecar naming its source URL, retrieval date, licence and citation. **None of
+the current sources is MIT**, and one has no stated licence at all, which is why
+the plan says to replace it rather than vendor it. The table is in
+`data/vendor/README.md` and is the authority; this file does not restate it.
+
+`data/vendor/` is empty at the scaffold commit. It is filled in session 5.
+
+## CC BY 4.0, in one line
+
+Reuse, adapt and redistribute for any purpose including commercially, provided
+you credit the author, link the licence, and say whether you changed anything:
+<https://creativecommons.org/licenses/by/4.0/>
+
+## CC0 1.0, in one line
+
+No conditions: <https://creativecommons.org/publicdomain/zero/1.0/>

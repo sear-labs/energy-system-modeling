@@ -1,0 +1,59 @@
+cff-version: 1.2.0
+title: "Energy System Modeling: companion code"
+message: "If you use this material, please cite it. To cite the textbook rather than the code, cite the book (see references below)."
+type: software
+authors:
+  - family-names: Jones
+    given-names: Erick C.
+    name-suffix: Jr.
+    affiliation: University of Texas at Arlington
+    orcid: "https://orcid.org/0000-0003-0559-4699"
+repository-code: "https://github.com/sear-labs/energy-system-modeling"
+abstract: >-
+  Teaching notebooks and a Python package accompanying the open textbook
+  Introduction to Energy System Modeling. Each notebook builds an energy-system
+  model by hand and checks it against the package, covering energy balances,
+  representative days, end-use disaggregation, capital cost and LCOE, pipeline
+  transport, DC power flow and locational marginal pricing, real network import,
+  material requirements, and a multi-city Texas capacity buildout.
+keywords:
+  - energy system modeling
+  - optimization
+  - PyPSA
+  - linear programming
+  - power systems
+  - teaching
+  - jupyter notebooks
+license: MIT
+license-url: "https://github.com/sear-labs/energy-system-modeling/blob/main/LICENSE-DATA"
+references:
+  - type: book
+    title: "Introduction to Energy System Modeling"
+    authors:
+      - family-names: Jones
+        given-names: Erick C.
+        name-suffix: Jr.
+    publisher:
+      name: "University of Texas at Arlington Libraries (Pressbooks)"
+    url: "https://uta.pressbooks.pub/energysystemmodeling"
+    year: 2026
+# ---------------------------------------------------------------------------
+# NO doi: FIELD YET, AND THAT IS DELIBERATE.
+#
+# Zenodo mints two DOIs against the first tagged release: a version DOI, new
+# every release, and a concept DOI, which always resolves to the latest version
+# and never changes. The CONCEPT DOI belongs here, and the order is forced --
+# you cannot have a DOI before the first release.
+#
+#   1. this file, with no doi                                     <- we are here
+#   2. connect the repo in Zenodo and tag a release. SET THE
+#      LICENCE ON THE DEPOSIT EXPLICITLY: the field is required
+#      and defaults to CC-BY, which is wrong for MIT code
+#   3. Zenodo mints both DOIs
+#   4. add the concept DOI here and commit
+#   5. never touch it again
+#
+# `license: MIT` above covers the code. The prose, notebooks and figures are
+# CC BY 4.0 and the authored tables are CC0 -- CFF takes one licence field, so
+# license-url points at LICENSE-DATA, which states all of them by path.
+# ---------------------------------------------------------------------------

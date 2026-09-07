@@ -1,0 +1,31 @@
+# Normalise line endings in the repository to LF, on every platform.
+#
+# WHY, specifically: the authoring machine is Windows, and without this a fresh
+# clone checks out CRLF while the committed objects hold LF. Every file then
+# *appears* to differ from its source, so the obvious way to verify a clone --
+# comparing checked-out files -- reports differences that do not exist. The
+# reliable check is `git rev-parse HEAD^{tree}` on both sides; this file makes
+# the naive check stop lying as well.
+#
+# It matters most for the notebooks. A .ipynb is JSON, and a CRLF round-trip
+# rewrites every line of it, which turns a one-cell edit into a whole-file diff
+# and makes a review of a notebook change unreadable.
+
+* text=auto eol=lf
+
+*.ipynb  text eol=lf
+*.py     text eol=lf
+*.md     text eol=lf
+*.cff    text eol=lf
+*.toml   text eol=lf
+*.csv    text eol=lf
+*.txt    text eol=lf
+
+# Never touched: anything that is not text.
+*.png    binary
+*.jpg    binary
+*.pdf    binary
+*.zip    binary
+*.xlsx   binary
+*.pptx   binary
+*.docx   binary
