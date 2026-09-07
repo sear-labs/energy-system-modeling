@@ -129,7 +129,7 @@ def verify():
 
 # ================================================================== title
 A(md(
-L("# Module 3 (Part 2): Power Flow and Locational Marginal Pricing"),
+L("# Power flow and locational marginal pricing"),
 L("## REE 4301 / IE 5300 - Energy Systems Modeling"),
 L(""),
 L("In the transport companion you moved gas through pipelines. You chose the "

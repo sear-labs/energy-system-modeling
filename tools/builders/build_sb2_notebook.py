@@ -82,7 +82,7 @@ def verify():
 
 
 A(md(
-L("# SB2: From a Smart Meter to Three Representative Days"),
+L("# From a smart meter to three representative days"),
 L("## REE 4301 / IE 5300 - Energy Systems Modeling"),
 L(""),
 L("A model runs on 8,760 hours. You cannot reason about 8,760 hours and "

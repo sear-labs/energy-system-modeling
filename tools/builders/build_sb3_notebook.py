@@ -82,7 +82,7 @@ def verify():
 
 
 A(md(
-L("# SB3: What Does It Cost to Build a Power Plant?"),
+L("# What does it cost to build a power plant?"),
 L("## REE 4301 / IE 5300 - Energy Systems Modeling"),
 L(""),
 L("Work through this in order. Each step is one line of arithmetic, and each "

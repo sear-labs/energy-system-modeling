@@ -27,13 +27,14 @@ checker finds nothing to check.
    belong with the vertical slice (session 3), where the checker is ported
    alongside a `check_notebooks.py` from `teaching-code`.
 
-## Two things are applied to notebooks AFTER a rebuild, not by the builders
+## Three things are applied to notebooks AFTER a rebuild, not by the builders
 
 A rebuild regenerates a notebook from its builder, which means it drops anything
-the builder does not emit. Two things are deliberately not in the builders, and
-both have their own idempotent tool — so the sequence after any rebuild is:
+the builder does not emit. Three things are deliberately not in the builders, and
+each has its own idempotent tool — so the sequence after any rebuild is:
 
     python tools/builders/build_<x>_notebook.py     # regenerate
+    python tools/sync_setup_cells.py                # re-apply the setup cell
     python tools/add_colab_badges.py                # re-apply the badge
     python tools/execute_notebooks.py --inplace     # re-execute
 
@@ -43,6 +44,13 @@ moves. `tools/add_colab_badges.py --check` fails if any badge is missing or
 points at the wrong path, which is the guard that makes the separation safe.
 
 **The executed outputs.** Part 5 says ship it executed; a builder emits source.
+
+**The setup cell**, for the same reason as the badge: it contains this
+notebook's own folder and a dependency list derived from what the notebook
+imports, so twelve hand-maintained copies would drift the moment one changed.
+`tools/sync_setup_cells.py --check` fails if any is missing or stale, and it
+also removes the bare `!pip install` cell the builders still emit -- that cell
+is unpinned, and the generated one installs the same things with version bounds.
 
 Everything else — including the fix to the time-series download in
 `build_1n_notebook.py` — **is** in the builder, patched in the same edit as the

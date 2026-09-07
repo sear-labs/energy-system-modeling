@@ -105,7 +105,7 @@ def verify():
 
 # ================================================================== title
 A(md(
-L("# Module 4: Supply Chains - Sourcing and Material Reality"),
+L("# Supply chains: sourcing and material reality"),
 L("## REE 4301 / IE 5300 - Energy Systems Modeling"),
 L(""),
 L("Two halves, and you need both."),

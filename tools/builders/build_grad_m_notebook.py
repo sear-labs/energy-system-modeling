@@ -86,7 +86,7 @@ A = C.append
 
 # ================================================================== title
 A(md(
-L("# GRAD-M: Model Diversity — the Same System in a Second Tool"),
+L("# Model diversity: the same system in a second tool"),
 L("## REE 4301 / IE 5300 / IE 6301 — Energy Systems Modeling"),
 L("### Graduate sections only. Individual work. After SB6."),
 L(""),

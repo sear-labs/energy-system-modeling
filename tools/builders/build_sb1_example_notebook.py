@@ -78,7 +78,7 @@ def verify():
 
 
 A(md(
-L("# SB1 worked example: one house"),
+L("# An energy balance for one house"),
 L("## REE 4301 / IE 5300 - Energy Systems Modeling"),
 L(""),
 L("A small, complete version of what SB1 asks for, so you can see the shape "

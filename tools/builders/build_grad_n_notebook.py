@@ -86,7 +86,7 @@ A = C.append
 
 # ================================================================== title
 A(md(
-L("# GRAD-N: Real Network Import — TX-123BT, then TAMU ACTIVSg"),
+L("# Real network import: TX-123BT, then TAMU ACTIVSg"),
 L("## REE 4301 / IE 5300 / IE 6301 — Energy Systems Modeling"),
 L("### Graduate sections only. Individual work. After Mini-Project 3."),
 L(""),

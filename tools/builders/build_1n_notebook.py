@@ -69,7 +69,7 @@ A = CELLS.append
 
 # ============================================================== Title
 A(md(
-L("# Assignment 1N: One-Node Disaggregation and Demand-Side Technologies"),
+L("# One-node disaggregation and demand-side technologies"),
 L("## REE 4301 — Energy Systems Modeling"),
 L("### Bridges Module 1 (Demand) into Module 2 (Generation)"),
 L(""),

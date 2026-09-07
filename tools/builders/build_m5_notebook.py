@@ -113,7 +113,7 @@ def verify():
 
 # ================================================================== title
 A(md(
-L("# Module 5: Should This Site Build On-Site Generation?"),
+L("# Should this site build on-site generation?"),
 L("## REE 4301 / IE 5300 - Energy Systems Modeling"),
 L("### The outro. Do this last."),
 L(""),

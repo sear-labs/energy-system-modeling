@@ -68,7 +68,7 @@ def main():
     C = []
 
     C.append(md(
-        "# Module 3: Energy Transportation and Network Optimization",
+        "# Energy transportation and network optimization",
         "## REE 4301 / IE 5300 - Energy Systems Modeling",
         "",
         "Moving energy costs money, and where it can go is limited. This "

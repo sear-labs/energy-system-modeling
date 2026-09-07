@@ -85,7 +85,7 @@ A = C.append
 
 # ================================================================== title
 A(md(
-L("# SB6: Multi-City Texas Buildout"),
+L("# A multi-city Texas capacity buildout"),
 L("## REE 4301 / IE 5300 / IE 6301 — Energy Systems Modeling"),
 L("### Team assignment. Modules 2 and 3, culminating."),
 L(""),

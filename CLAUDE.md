@@ -99,6 +99,50 @@ changes when a notebook moves, and the executed outputs, because a builder emits
 an idempotent tool, and `tools/builders/README.md` gives the three-command sequence to run after any
 rebuild.
 
+## Where an instance table comes from, decided once
+
+**`esm.data.table(name)` is the only way a notebook or the package should read a
+table.** Resolution order, and local wins:
+
+    explicit source -> $ESM_DATA -> data/raw beside the package
+                    -> data/raw under the cwd -> the published raw URL
+
+**Local winning is not a preference, it is what Part 4 rests on.** A reader is
+told to edit `data/raw/` and re-run, and the agreement assertion is supposed to
+stay green because both halves picked up the edit. If the URL ever won, the edit
+would do nothing, silently, and the notebook would keep reporting the numbers on
+the published branch. `tests/test_data_loader.py` pins that case specifically.
+
+### Why not vendor the CSVs into the package
+
+That is `advopt-lithiumsc`'s answer — a second copy under `src/lithium/data/`
+with a test asserting it has not drifted from `data/raw/`. It works, and it is
+two copies of every table plus a guard to watch them. The URL fallback needs
+neither: one copy, on the published branch.
+
+The reason either is needed at all is that **`pip install git+https://…` ships
+the package and not `data/`** — a data directory at the repo root is not package
+data and never enters the wheel. The standard's Part 6 records that shipping in
+three published repositories.
+
+### What this does NOT buy
+
+**It does not get round the repository being private.** Measured 2026-09-07: a
+raw `raw.githubusercontent.com` URL on this repository returns **404**, exactly
+as `git clone` fails on it. Public is the prerequisite for a student running any
+of this, and no data-loading trick changes that.
+
+**`DATA_REF` must become a release tag before a link is handed to students.** It
+is `main` during development, and `main` moves — a notebook fetching `main`
+would silently change its answer when someone edited a table, which is "every
+number in the prose comes from a run" failing from the outside in. Part 1 rule 8:
+tag what you hand out.
+
+> **This question is not local to this repository.** Three repositories in the
+> organisation have solved it three different ways. If the pattern here holds
+> through session 4, it is worth petitioning Part 4 of the standard rather than
+> leaving each project to rediscover it.
+
 ## The one that keeps going wrong
 
 **Where an optimum is not unique, the check compares what every optimum shares, and the prose

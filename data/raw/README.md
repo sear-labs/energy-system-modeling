@@ -1,7 +1,14 @@
 # Authored instance tables
 
-**Empty at the scaffold commit.** Session 3 fills it, starting with
-`power_flow_and_lmp`, and sessions 4–6 follow the same pattern.
+**Still empty.** Session 3 fills it, starting with `power_flow_and_lmp`, and
+sessions 4–6 follow the same pattern.
+
+**Read them with `esm.data.table(name)`, never with a bare path or URL.** It
+resolves a local copy first and falls back to the published raw URL, so the
+same notebook works in a clone, on Colab, and from a bare `pip install` — and,
+crucially, a reader who edits a file here sees the edit flow into both the
+hand-built model and the agreement check. See `../../src/esm/data.py` for why
+local has to win.
 
 ## What belongs here, and what does not
 

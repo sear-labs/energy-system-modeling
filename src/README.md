@@ -1,12 +1,18 @@
 # `src/esm/` — the package
 
-**Not written yet.** Session 3 builds it, starting from what
+**Only the data layer exists.** `esm.data` decides where an instance table comes
+from; the model modules arrive with session 3, starting from what
 `notebooks/p4_networks/power_flow_and_lmp.ipynb` builds by hand.
 
-There is deliberately **no stub `__init__.py` here**. A hollow package that
-imports and does nothing is worse than an absent one: it makes
-`from esm import ...` succeed and then fail somewhere less obvious, and it invites
-an agreement assertion to be written against a module that computes nothing.
+That order is deliberate. The data layer is what a notebook needs to run
+anywhere at all, and it is the piece the whole organisation kept re-solving
+differently — clone the repo, vendor a second copy of the CSVs into the package,
+or hardcode a raw URL. `esm/data.py` picks one and writes down why, and
+`tests/test_data_loader.py` pins the resolution order.
+
+**There is still no model code, so no notebook carries an agreement assertion.**
+That is Part 4's entire mechanism missing, and `tools/check_notebooks.py` reports
+it per notebook rather than letting it pass quietly.
 
 ## What it is for
 

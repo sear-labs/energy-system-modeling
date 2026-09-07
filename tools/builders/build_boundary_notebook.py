@@ -78,7 +78,7 @@ def verify():
 
 # ================================================================== title
 A(md(
-L("# Module 0B: Where Do You Draw the Boundary?"),
+L("# Where do you draw the boundary?"),
 L("## REE 4301 / IE 5300 - Energy Systems Modeling"),
 L("### Do this straight after the toy LP notebook. Before anything else."),
 L(""),

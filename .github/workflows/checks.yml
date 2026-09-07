@@ -49,5 +49,9 @@ jobs:
       - name: every Colab badge points where it should
         run: python tools/add_colab_badges.py --check
 
+      - name: every notebook carries the current setup cell
+        # "patch them everywhere or nowhere" -- enforced rather than remembered
+        run: python tools/sync_setup_cells.py --check
+
       - name: notebook audit
         run: python tools/check_notebooks.py
