@@ -62,17 +62,17 @@ The names are the course's, and the notebooks have been renamed for their subjec
 
 | builder | notebook |
 |---|---|
-| `build_boundary_notebook.py` | `p1_foundations/model_boundary.ipynb` |
-| `build_sb1_example_notebook.py` | `p1_foundations/one_house_balance.ipynb` |
-| `build_sb2_notebook.py` | `p2_demand/representative_days.ipynb` |
-| `build_1n_notebook.py` | `p2_demand/end_use_disaggregation.ipynb` |
-| `build_sb3_notebook.py` | `p3_generation/capital_and_lcoe.ipynb` |
-| `build_transport_notebook.py` | `p4_networks/pipeline_transport.ipynb` |
-| `build_powerflow_notebook.py` | `p4_networks/power_flow_and_lmp.ipynb` |
-| `build_grad_n_notebook.py` | `p4_networks/real_network_import.ipynb` |
-| `build_supplychain_notebook.py` | `p5_storage_supply/material_requirements.ipynb` |
-| `build_sb6_notebook.py` | `capstone/texas_multi_city_buildout.ipynb` |
-| `build_m5_notebook.py` | `capstone/facility_decision.ipynb` |
+| `build_boundary_notebook.py` | `p1_foundations/01_model_boundary.ipynb` |
+| `build_sb1_example_notebook.py` | `p1_foundations/02_one_house_balance.ipynb` |
+| `build_sb2_notebook.py` | `p2_demand/05_representative_days.ipynb` |
+| `build_1n_notebook.py` | `p2_demand/06_end_use_disaggregation.ipynb` |
+| `build_sb3_notebook.py` | `p3_generation/09_capital_and_lcoe.ipynb` |
+| `build_transport_notebook.py` | `p4_networks/17_pipeline_transport.ipynb` |
+| `build_powerflow_notebook.py` | `p4_networks/18_power_flow_and_lmp.ipynb` |
+| `build_grad_n_notebook.py` | `p4_networks/15_real_network_import.ipynb` |
+| `build_supplychain_notebook.py` | `p5_storage_supply/21_material_requirements.ipynb` |
+| `build_sb6_notebook.py` | `capstone/AppA_texas_multi_city_buildout.ipynb` |
+| `build_m5_notebook.py` | `capstone/AppA_facility_decision.ipynb` |
 | `build_grad_m_notebook.py` | `graduate/model_diversity.ipynb` |
 
 Twelve builders, twelve notebooks, one to one.

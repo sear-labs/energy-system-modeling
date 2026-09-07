@@ -197,24 +197,24 @@ One click each, once the repository is public. Until then these resolve to a
 | Notebook | Title | |
 |---|---|---|
 | **`capstone/`** | | |
-| `facility_decision.ipynb` | Should this site build on-site generation? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/capstone/facility_decision.ipynb) |
-| `texas_multi_city_buildout.ipynb` | A multi-city Texas capacity buildout | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/capstone/texas_multi_city_buildout.ipynb) |
+| `AppA_facility_decision.ipynb` | Should this site build on-site generation? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/capstone/AppA_facility_decision.ipynb) |
+| `AppA_texas_multi_city_buildout.ipynb` | A multi-city Texas capacity buildout | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/capstone/AppA_texas_multi_city_buildout.ipynb) |
 | **`graduate/`** | | |
 | `model_diversity.ipynb` | Model diversity: the same system in a second tool | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/graduate/model_diversity.ipynb) |
 | **`p1_foundations/`** | | |
-| `model_boundary.ipynb` | Where do you draw the boundary? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p1_foundations/model_boundary.ipynb) |
-| `one_house_balance.ipynb` | An energy balance for one house | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p1_foundations/one_house_balance.ipynb) |
+| `01_model_boundary.ipynb` | Where do you draw the boundary? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p1_foundations/01_model_boundary.ipynb) |
+| `02_one_house_balance.ipynb` | An energy balance for one house | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p1_foundations/02_one_house_balance.ipynb) |
 | **`p2_demand/`** | | |
-| `end_use_disaggregation.ipynb` | One-node disaggregation and demand-side technologies | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p2_demand/end_use_disaggregation.ipynb) |
-| `representative_days.ipynb` | From a smart meter to three representative days | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p2_demand/representative_days.ipynb) |
+| `05_representative_days.ipynb` | From a smart meter to three representative days | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p2_demand/05_representative_days.ipynb) |
+| `06_end_use_disaggregation.ipynb` | One-node disaggregation and demand-side technologies | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p2_demand/06_end_use_disaggregation.ipynb) |
 | **`p3_generation/`** | | |
-| `capital_and_lcoe.ipynb` | What does it cost to build a power plant? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p3_generation/capital_and_lcoe.ipynb) |
+| `09_capital_and_lcoe.ipynb` | What does it cost to build a power plant? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p3_generation/09_capital_and_lcoe.ipynb) |
 | **`p4_networks/`** | | |
-| `pipeline_transport.ipynb` | Energy transportation and network optimization | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p4_networks/pipeline_transport.ipynb) |
-| `power_flow_and_lmp.ipynb` | Power flow and locational marginal pricing | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p4_networks/power_flow_and_lmp.ipynb) |
-| `real_network_import.ipynb` | Real network import: TX-123BT, then TAMU ACTIVSg | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p4_networks/real_network_import.ipynb) |
+| `15_real_network_import.ipynb` | Real network import: TX-123BT, then TAMU ACTIVSg | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p4_networks/15_real_network_import.ipynb) |
+| `17_pipeline_transport.ipynb` | Energy transportation and network optimization | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p4_networks/17_pipeline_transport.ipynb) |
+| `18_power_flow_and_lmp.ipynb` | Power flow and locational marginal pricing | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p4_networks/18_power_flow_and_lmp.ipynb) |
 | **`p5_storage_supply/`** | | |
-| `material_requirements.ipynb` | Supply chains: sourcing and material reality | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p5_storage_supply/material_requirements.ipynb) |
+| `21_material_requirements.ipynb` | Supply chains: sourcing and material reality | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p5_storage_supply/21_material_requirements.ipynb) |
 
 <!-- NOTEBOOK-TABLE:END -->
 

@@ -43,26 +43,26 @@ src/esm/                  the package
 data/raw/                 authored instance tables, both sides read them
 data/vendor/              third-party data, one sidecar per file
 notebooks/
-  p1_foundations/         model_boundary.ipynb
-                          one_house_balance.ipynb
+  p1_foundations/         01_model_boundary.ipynb
+                          02_one_house_balance.ipynb
                           README.md  -> teaching-code 12 for the toy LP and PyPSA
-  p2_demand/              representative_days.ipynb
-                          end_use_disaggregation.ipynb
+  p2_demand/              05_representative_days.ipynb
+                          06_end_use_disaggregation.ipynb
                           process_heat_electrification.ipynb          NEW
                           depot_charging.ipynb                        NEW
-  p3_generation/          capital_and_lcoe.ipynb
+  p3_generation/          09_capital_and_lcoe.ipynb
                           screening_curves.ipynb                      NEW
   p4_networks/            feeder_hosting_capacity.ipynb               NEW
                           pipeline_pressure_and_n1.ipynb              NEW
                           cost_of_transit_by_mode.ipynb               NEW
-                          pipeline_transport.ipynb
-                          power_flow_and_lmp.ipynb
-                          real_network_import.ipynb
+                          17_pipeline_transport.ipynb
+                          18_power_flow_and_lmp.ipynb
+                          15_real_network_import.ipynb
   p5_storage_supply/      storage_duration_sizing.ipynb               NEW
-                          material_requirements.ipynb
+                          21_material_requirements.ipynb
                           README.md  -> teaching-code 12 battery, 13 transshipment
-  capstone/               texas_multi_city_buildout.ipynb
-                          facility_decision.ipynb
+  capstone/               AppA_texas_multi_city_buildout.ipynb
+                          AppA_facility_decision.ipynb
   graduate/               model_diversity.ipynb
 tests/  tools/  tools/builders/
 ```

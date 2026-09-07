@@ -110,17 +110,17 @@ MUST_NOT_BE_IGNORED = [
     "tools/builders/build_transport_notebook.py",
     "tools/check_builders.py",
     # every notebook
-    "notebooks/p1_foundations/model_boundary.ipynb",
-    "notebooks/p1_foundations/one_house_balance.ipynb",
-    "notebooks/p2_demand/representative_days.ipynb",
-    "notebooks/p2_demand/end_use_disaggregation.ipynb",
-    "notebooks/p3_generation/capital_and_lcoe.ipynb",
-    "notebooks/p4_networks/pipeline_transport.ipynb",
-    "notebooks/p4_networks/power_flow_and_lmp.ipynb",
-    "notebooks/p4_networks/real_network_import.ipynb",
-    "notebooks/p5_storage_supply/material_requirements.ipynb",
-    "notebooks/capstone/texas_multi_city_buildout.ipynb",
-    "notebooks/capstone/facility_decision.ipynb",
+    "notebooks/p1_foundations/01_model_boundary.ipynb",
+    "notebooks/p1_foundations/02_one_house_balance.ipynb",
+    "notebooks/p2_demand/05_representative_days.ipynb",
+    "notebooks/p2_demand/06_end_use_disaggregation.ipynb",
+    "notebooks/p3_generation/09_capital_and_lcoe.ipynb",
+    "notebooks/p4_networks/17_pipeline_transport.ipynb",
+    "notebooks/p4_networks/18_power_flow_and_lmp.ipynb",
+    "notebooks/p4_networks/15_real_network_import.ipynb",
+    "notebooks/p5_storage_supply/21_material_requirements.ipynb",
+    "notebooks/capstone/AppA_texas_multi_city_buildout.ipynb",
+    "notebooks/capstone/AppA_facility_decision.ipynb",
     "notebooks/graduate/model_diversity.ipynb",
     # what sessions 3 and 5 will add
     "src/esm/__init__.py",
@@ -164,7 +164,7 @@ def test_the_example_trap_specifically():
     """The regression this file was written for.
 
     `*exam*` matches "example". Any future edit that reaches for the short
-    pattern breaks the builder for `one_house_balance.ipynb`, and breaks it
+    pattern breaks the builder for `02_one_house_balance.ipynb`, and breaks it
     silently.
     """
     assert not is_ignored("tools/builders/build_sb1_example_notebook.py")

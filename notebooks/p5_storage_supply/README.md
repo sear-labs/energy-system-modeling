@@ -5,7 +5,7 @@ reality of building the things that do it.
 
 | notebook | chapter | what it does |
 |---|---|---|
-| `material_requirements.ipynb` | 21, §21.4 A Reference Build, in Tons | what a given buildout costs in materials rather than in dollars |
+| `21_material_requirements.ipynb` | 21, §21.4 A Reference Build, in Tons | what a given buildout costs in materials rather than in dollars |
 | `storage_duration_sizing.ipynb` | 20, §20.2 The Storage Comparison | **not yet written** — a multi-day wind lull sized twice, battery against hydrogen, splitting power from energy |
 
 ## Two chapters are served from the method library instead
@@ -19,7 +19,7 @@ reality of building the things that do it.
 > **Chapter 22 and Case Study 5** — §22.1 The Transshipment Model — is
 > [`teaching-code` notebook 13](https://github.com/sear-labs/teaching-code/tree/main/notebooks/13_supply_chain).
 
-`material_requirements.ipynb` arrived here as the course's Module 4 supply-chain
+`21_material_requirements.ipynb` arrived here as the course's Module 4 supply-chain
 notebook, and **its sourcing LP is the model that is already notebook 13**. Only
 the material-intensity accounting belongs to this repository, as Chapter 21's
 companion. Splitting the two is session 4's work in this part; until then the

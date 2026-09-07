@@ -99,44 +99,45 @@ changes when a notebook moves, and the executed outputs, because a builder emits
 an idempotent tool, and `tools/builders/README.md` gives the three-command sequence to run after any
 rebuild.
 
-## BLOCKING, before this repository goes public: seven notebooks are assignments
+## Seven notebooks are also graded assignments — ruled on, not open
 
 **Seven of the twelve share a name and a subject with a graded assignment** in
-`2026 Fall/Assignments/`, and one of the assignment specs names its notebook
-outright — SB6-SPEC reads *"Companion notebook:
-SB6_Multi_City_Texas_Buildout.ipynb · Submit one PDF plus your notebook."*
+`2026 Fall/Assignments/`, and SB6-SPEC names its notebook outright: *"Companion
+notebook: SB6_Multi_City_Texas_Buildout.ipynb · Submit one PDF plus your
+notebook."* So publishing a fully executed notebook could, for some of these, be
+publishing a completed submission.
 
-Publishing a fully executed notebook is therefore, for some of these, publishing
-a completed submission. Jones's rule, 2026-09-07: *"there are assignments in the
-class and I shouldn't do those assignments for the students and put that on the
-public repo."*
+**Jones ruled on 2026-09-07: worked examples for most, a scaffold that stops only
+where that makes sense, and the current state is right.** So this is settled and
+does not gate anything.
 
-| notebook | assignment | asks for the student's own instance | stops at a blank |
-|---|---|---|---|
-| `end_use_disaggregation` | 1N | yes | **yes** — cell 51 |
-| `one_house_balance` | SB1-SPEC | yes | no |
-| `representative_days` | SB2 | yes | no |
-| `capital_and_lcoe` | SB3 | yes | no |
-| `texas_multi_city_buildout` | SB6-SPEC | yes | no |
-| `model_diversity` | GRAD-M | yes | no |
-| `real_network_import` | GRAD-N | yes | no |
-| `facility_decision` | *(not an assignment)* | — | **yes** — cell 66 |
+| notebook | assignment | shape |
+|---|---|---|
+| `06_end_use_disaggregation` | 1N | **scaffold** — stops at cell 51, the student chooses the technology |
+| `AppA_facility_decision` | *(not an assignment)* | **scaffold** — stops at cell 66, the student writes the recommendation |
+| `02_one_house_balance` | SB1-SPEC | worked example |
+| `05_representative_days` | SB2 | worked example |
+| `09_capital_and_lcoe` | SB3 | worked example |
+| `AppA_texas_multi_city_buildout` | SB6-SPEC | worked example |
+| `model_diversity` | GRAD-M | worked example |
+| `15_real_network_import` | GRAD-N | worked example |
 
-**This is a teaching judgement per notebook and it is Jones's, not a session's.**
-Two of them are described in the course's own `CLAUDE.md` as deliberate worked
-examples — SB1 and SB3 are named there as "the two rebuilt examples" — so being
-fully worked is the point for those. The others have not been ruled on.
+**Why worked examples are the right default here**, rather than a compromise: the
+course's own `CLAUDE.md` names SB1 and SB3 as "the two rebuilt examples" and says
+*"finish what you ask for — if the assignment wants a Sankey, the example draws
+the Sankey."* An example that stops short of the deliverable is exactly where the
+student most needed to see the shape. Every one of these assignments asks the
+student for **their own instance**, so a worked example on a fixed instance shows
+the method without doing their work.
 
-**The remedy already exists in this repository and needs no invention.** Part 5's
-deliberate blank is exactly the device: `end_use_disaggregation` and
-`facility_decision` each raise with an explanation at the point where the
-student's own work begins, and `tools/execute_notebooks.py` ships them executed
-up to that cell with the blank clean. Extending that pattern is the fix wherever
-a notebook currently works a student's instance through to the answer.
+**The test to apply to a new notebook** is therefore not "is this an assignment"
+but: *does it work the instance the student was told to bring?* If yes, it needs
+a deliberate blank at that point. If it works a fixed instance of the author's
+own, it is an example and should be finished.
 
-> **Do not flip this repository to public until that triage is done.** It is the
-> one remaining decision that is expensive to reverse: a public commit is public,
-> and retiring an assignment costs the course a piece of assessment.
+Both scaffolds use Part 5's device — raise with an explanation, not a bare
+`NameError` — and `tools/execute_notebooks.py` ships them executed up to that
+cell with the blank clean, which is the state a student opens them in.
 
 ## Where an instance table comes from, decided once
 

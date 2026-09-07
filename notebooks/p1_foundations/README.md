@@ -5,8 +5,8 @@ doing when you stop writing the linear program yourself.
 
 | notebook | chapter | what it does |
 |---|---|---|
-| `model_boundary.ipynb` | 1, §1.4 Choosing the Boundary | the motivating exception: it anchors at the *first* chapter because it raises the question the rest of Part I answers |
-| `one_house_balance.ipynb` | 2, §2.2 Visualizing the System: Energy Balances | one house, at the reader's own scale, where the therm and gallon conversions stay visible instead of vanishing into quads |
+| `01_model_boundary.ipynb` | 1, §1.4 Choosing the Boundary | the motivating exception: it anchors at the *first* chapter because it raises the question the rest of Part I answers |
+| `02_one_house_balance.ipynb` | 2, §2.2 Visualizing the System: Energy Balances | one house, at the reader's own scale, where the therm and gallon conversions stay visible instead of vanishing into quads |
 
 ## The toy LP and the PyPSA introduction are not here, on purpose
 

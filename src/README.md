@@ -2,7 +2,7 @@
 
 **Only the data layer exists.** `esm.data` decides where an instance table comes
 from; the model modules arrive with session 3, starting from what
-`notebooks/p4_networks/power_flow_and_lmp.ipynb` builds by hand.
+`notebooks/p4_networks/18_power_flow_and_lmp.ipynb` builds by hand.
 
 That order is deliberate. The data layer is what a notebook needs to run
 anywhere at all, and it is the piece the whole organisation kept re-solving
