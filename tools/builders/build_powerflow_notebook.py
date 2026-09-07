@@ -256,15 +256,34 @@ A(code(
 L("# =========================================="),
 L("# 1. Sets and Parameters (Data)"),
 L("# =========================================="),
-L("buses = ['West Texas', 'Dallas', 'Houston']"),
+L("# The instance comes out of data/raw/ rather than being typed here, because"),
+L("# the package reads those same four files. Nothing else could show that the"),
+L("# hand-built model below and the packaged one are the same model -- and if"),
+L("# you edit a value in data/raw/, both sides pick it up and the check at the"),
+L("# bottom stays green."),
+L("from esm.data import table"),
 L(""),
-L("demand = {'Dallas': 120.0}                        # D_j,  MW"),
-L("gen_costs = {'WTX_Wind': 0.0, 'HOU_Gas': 40.0}    # c_g,  $/MWh"),
-L("gen_max = {'WTX_Wind': 150.0, 'HOU_Gas': 100.0}   # Pbar_g,  MW"),
+L("buses = list(table('dcopf3_buses.csv')['bus'])"),
+L("gens = table('dcopf3_generators.csv')"),
+L("lines = table('dcopf3_lines.csv')"),
+L("loads = table('dcopf3_loads.csv')"),
 L(""),
-L("line_X = {'WTX_DAL': 0.1, 'DAL_HOU': 0.1, 'HOU_WTX': 0.1}   # X_ij, p.u."),
-L("line_limit = {'WTX_DAL': 70.0, 'DAL_HOU': 1000.0,"),
-L("              'HOU_WTX': 1000.0}                  # Fbar_ij,  MW"),
+L("print(gens.to_string(index=False))"),
+L("print()"),
+L("print(lines.to_string(index=False))"),
+L(""),
+L("# The model indexes by generator name and by line name, so pull the columns"),
+L("# into dictionaries keyed the way every constraint below looks them up. The"),
+L("# printed dictionaries make that index set explicit rather than implied."),
+L("demand = dict(zip(loads['bus'], loads['p_set']))            # D_j,  MW"),
+L("gen_costs = dict(zip(gens['generator'], gens['marginal_cost']))  # c_g,  $/MWh"),
+L("gen_max = dict(zip(gens['generator'], gens['p_nom']))       # Pbar_g,  MW"),
+L("line_X = dict(zip(lines['line'], lines['x']))               # X_ij,  p.u."),
+L("line_limit = dict(zip(lines['line'], lines['s_nom']))       # Fbar_ij,  MW"),
+L(""),
+L("print()"),
+L("print('demand    ', demand)"),
+L("print('line_limit', line_limit)"),
 L(""),
 L("# =========================================="),
 L("# 2. Model Initialization"),
@@ -598,6 +617,11 @@ L("`bal_dal.Pi` in your hand-written Gurobi model and "
 ))
 
 A(code(
+L("# The tolerance is imported, not typed. Part 4: a threshold written in two"),
+L("# places is a value with copies, and the duplicate is where a fix does not"),
+L("# reach."),
+L("from esm.tolerance import agree"),
+L(""),
 L("py_lmp = n.buses_t.marginal_price.iloc[0]"),
 L("py_gen = n.generators_t.p.iloc[0]"),
 L(""),
@@ -615,7 +639,7 @@ L("for label, a, b in rows:"),
 L("    ok = 'yes' if abs(a - b) < 1e-6 else 'NO'"),
 L("    print(f'{label:16s} {a:12.2f} {b:12.2f}  {ok}')"),
 L(""),
-L("assert all(abs(a - b) < 1e-6 for _, a, b in rows), 'the two models differ'"),
+L("assert all(agree(a, b) for _, a, b in rows), 'the two models differ'"),
 L("print()"),
 L("print('Same model. PyPSA did not invent new mathematics -'"),
 L("      ' it wrote your constraints for you.')"),
@@ -686,10 +710,32 @@ L("print(sweep.to_string())"),
 ))
 
 A(md(
+L("### Where exactly does it break?"),
+L(""),
+L("The sweep says somewhere between 40 and 50 MW. The formula says exactly where: gas has to cover 240 - 3*L*, and the plant is 100 MW, so Dallas can be served only while 240 - 3*L* <= 100."),
+))
+
+A(code(
+L("# Computed and printed rather than stated in the prose above, so the number"),
+L("# comes from a run. The assert is the point: it fails if a future edit moves"),
+L("# the sweep, the plant size or the formula out of step with each other."),
+L("breakpoint_mw = (240 - 100) / 3"),
+L("feasible = sweep[sweep['status'] == 'optimal'].index.min()"),
+L("infeasible = sweep[sweep['status'] != 'optimal'].index.max()"),
+L(""),
+L("print(f'Dallas can be served only while L >= {breakpoint_mw:.1f} MW')"),
+L("print(f'the sweep brackets it: {infeasible:.0f} MW infeasible, {feasible:.0f} MW feasible')"),
+L(""),
+L("assert infeasible < breakpoint_mw < feasible, ("),
+L("    'the sweep no longer brackets the breakpoint')"),
+))
+
+A(md(
 L("> **The 40 MW row is infeasible, and that is the correct answer.** With "
   "only 40 MW able to reach Dallas directly, the rest has to come from gas - "
   "but the formula says gas would need 240 − 3*L* = 120 MW, and the plant is "
-  "only 100 MW. The model refuses. Below **L = 46.7 MW this network cannot "
+  "only 100 MW. The model refuses -- and the cell above prints the exact "
+  "breakpoint, below which this network cannot "
   "serve Dallas at all**, and no amount of wind in West Texas changes that."),
 L(">"),
 L("> An infeasible model is information, not a failure. It told you the "
@@ -852,6 +898,50 @@ def syntax_check(cells):
         raise SystemExit("%d cell(s) failed to compile" % bad)
     print("syntax check: %d code cells compile"
           % sum(1 for c in cells if c["cell_type"] == "code"))
+
+
+A(md(
+L("---"),
+L("## Does the package agree?"),
+L(""),
+L("Everything above was built by hand, one constraint at a time, because that is the lesson. `esm.power_flow` builds the same model once, from the same four tables in `data/raw/`, through PyPSA rather than through gurobipy."),
+L(""),
+L("Two transcriptions of the same algebra would share their mistakes, so the package deliberately takes a different route to the same model. If the two agree, the hand-built version above is probably right."),
+L(""),
+L("**What is compared, and what is not.** The voltage angles are *not* unique - DC power flow fixes only angle differences, so this notebook's reference bus, PyPSA's, and the package's all give different angles and all three are correct. Flows, dispatch, prices and cost are the same in every optimum, so those are what the check asserts. Comparing the angles would be checking that two solvers took the same path, which is not the same claim at all."),
+))
+
+A(code(
+L("from esm.power_flow import load_dcopf3, solve_dcopf, check_balances"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L(""),
+L("packaged = solve_dcopf(load_dcopf3())"),
+L(""),
+L("checks = [('total cost', m.ObjVal, packaged.cost),"),
+L("          ('wind MW', P_wind.X, packaged.dispatch['WTX_Wind']),"),
+L("          ('gas MW', P_gas.X, packaged.dispatch['HOU_Gas']),"),
+L("          ('flow WTX->DAL', f_wd, packaged.flows['WTX_DAL']),"),
+L("          ('flow DAL->HOU', f_dh, packaged.flows['DAL_HOU']),"),
+L("          ('LMP West Texas', lmp_wtx, packaged.lmp['West Texas']),"),
+L("          ('LMP Dallas', lmp_dal, packaged.lmp['Dallas']),"),
+L("          ('LMP Houston', lmp_hou, packaged.lmp['Houston'])]"),
+L(""),
+L("print(f'{'quantity':16s} {'by hand':>12s} {'package':>12s} {'rel diff':>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:16s} {hand:12.4f} {pkg:12.4f} {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L(""),
+L("# And a domain invariant, asserted rather than asserted-in-prose: every bus"),
+L("# balances. If this fails the plumbing is wrong, not the physics."),
+L("check_balances(load_dcopf3(), packaged)"),
+L(""),
+L("print()"),
+L("print(f'notebook and package agree to {worst:.1e}; every bus balances')"),
+))
 
 
 NOTEBOOK = {

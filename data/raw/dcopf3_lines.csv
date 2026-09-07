@@ -1,0 +1,4 @@
+line,bus0,bus1,x,s_nom
+WTX_DAL,West Texas,Dallas,0.1,70.0
+DAL_HOU,Dallas,Houston,0.1,1000.0
+HOU_WTX,Houston,West Texas,0.1,1000.0
