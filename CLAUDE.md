@@ -99,6 +99,45 @@ changes when a notebook moves, and the executed outputs, because a builder emits
 an idempotent tool, and `tools/builders/README.md` gives the three-command sequence to run after any
 rebuild.
 
+## BLOCKING, before this repository goes public: seven notebooks are assignments
+
+**Seven of the twelve share a name and a subject with a graded assignment** in
+`2026 Fall/Assignments/`, and one of the assignment specs names its notebook
+outright — SB6-SPEC reads *"Companion notebook:
+SB6_Multi_City_Texas_Buildout.ipynb · Submit one PDF plus your notebook."*
+
+Publishing a fully executed notebook is therefore, for some of these, publishing
+a completed submission. Jones's rule, 2026-09-07: *"there are assignments in the
+class and I shouldn't do those assignments for the students and put that on the
+public repo."*
+
+| notebook | assignment | asks for the student's own instance | stops at a blank |
+|---|---|---|---|
+| `end_use_disaggregation` | 1N | yes | **yes** — cell 51 |
+| `one_house_balance` | SB1-SPEC | yes | no |
+| `representative_days` | SB2 | yes | no |
+| `capital_and_lcoe` | SB3 | yes | no |
+| `texas_multi_city_buildout` | SB6-SPEC | yes | no |
+| `model_diversity` | GRAD-M | yes | no |
+| `real_network_import` | GRAD-N | yes | no |
+| `facility_decision` | *(not an assignment)* | — | **yes** — cell 66 |
+
+**This is a teaching judgement per notebook and it is Jones's, not a session's.**
+Two of them are described in the course's own `CLAUDE.md` as deliberate worked
+examples — SB1 and SB3 are named there as "the two rebuilt examples" — so being
+fully worked is the point for those. The others have not been ruled on.
+
+**The remedy already exists in this repository and needs no invention.** Part 5's
+deliberate blank is exactly the device: `end_use_disaggregation` and
+`facility_decision` each raise with an explanation at the point where the
+student's own work begins, and `tools/execute_notebooks.py` ships them executed
+up to that cell with the blank clean. Extending that pattern is the fix wherever
+a notebook currently works a student's instance through to the answer.
+
+> **Do not flip this repository to public until that triage is done.** It is the
+> one remaining decision that is expensive to reverse: a public commit is public,
+> and retiring an assignment costs the course a piece of assessment.
+
 ## Where an instance table comes from, decided once
 
 **`esm.data.table(name)` is the only way a notebook or the package should read a
