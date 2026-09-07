@@ -1,0 +1,51 @@
+# What this repository tolerates. Ranges with UPPER BOUNDS, per Part 1 rule 3:
+# an unpinned dependency will one day install a major version with a changed API
+# and either break or -- worse -- silently alter results.
+#
+# This file is half the claim. `requirements-lock.txt` is the other half: the
+# resolved list that actually produced the outputs committed in the notebooks.
+# A range says what will install; only the lock says what ran.
+#
+#   python -m venv <short-path>/esm      # SHORT: Windows long-path limits bite
+#   <short-path>/esm/Scripts/pip install -r requirements.txt
+#   <short-path>/esm/Scripts/python -m ipykernel install --user --name esm \
+#       --display-name "Python (esm: pypsa)"
+#
+# Interpreter: Python 3.13.9 on win32 is what produced the committed outputs.
+# PyPSA 1.3 requires pandas 3, which the Anaconda base environment does not have
+# -- that is why this gets its own environment and its own kernel rather than
+# a PYTHONPATH.
+
+# --- the model stack -------------------------------------------------------
+pypsa>=1.3,<2
+linopy>=0.9,<1
+
+# --- solvers ---------------------------------------------------------------
+# HiGHS is the one that needs no licence and has no size cap. It is what a
+# student on Colab can always rely on.
+highspy>=1.11,<2
+# Gurobi's pip wheel ships a restricted licence: 2,000 variables and 2,000
+# constraints, no registration. Several notebooks default to it and stay inside
+# that; real_network_import does not, and says so, and uses HiGHS instead.
+gurobipy>=11,<14
+pulp>=3,<4
+
+# --- data and numerics -----------------------------------------------------
+pandas>=3,<4
+numpy>=2,<3
+scipy>=1.15,<2
+networkx>=3,<4
+openpyxl>=3.1,<4
+requests>=2.31,<3
+
+# --- figures ---------------------------------------------------------------
+matplotlib>=3.9,<4
+plotly>=6,<8
+ipywidgets>=8,<9
+
+# --- running and checking the notebooks ------------------------------------
+ipykernel>=6.29,<8
+nbformat>=5.10,<6
+nbclient>=0.10,<1
+nbconvert>=7.16,<8
+pytest>=8,<10

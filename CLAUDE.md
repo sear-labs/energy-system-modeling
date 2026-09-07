@@ -73,18 +73,31 @@ and it is resolved when the course starts teaching from this repository instead.
   `band_trims`, `fitpass`). Only `build_m5_notebook.py` from that name family is a notebook builder.
   `check_builders.py` globs `build_*notebook*.py`, which is the same distinction, arrived at
   independently.
-- **No executed outputs.** Nothing here has been run. Part 5 says *ship it executed*, and this
-  repository does not yet satisfy it; the README says so at the top rather than leaving a reader to
-  discover it.
+- **No `src/esm`, and therefore no agreement assertion in any notebook.** Twelve notebooks build
+  models by hand with nothing to check them against. That is Part 4's whole mechanism missing, and
+  it is session 3's work. `tools/check_notebooks.py` reports it per notebook rather than letting it
+  pass quietly.
+- **No outputs after a deliberate blank.** Two notebooks stop where the student must choose, and
+  they are committed executed up to exactly that cell. That is the state a student opens them in,
+  not an interrupted run.
 
 ## The builders still point at the folder they came from
 
 Every `tools/builders/build_*.py` computes its output path as
 `ROOT/"2026 Fall"/"Notebooks"/<old name>.ipynb`, and `tools/check_builders.py` looks for notebooks
-there too. **They were copied verbatim and not repaired**, so that the scaffold commit is a move and
-nothing else, and so the diagnostic pass measures the builders as they actually are rather than as
-this session left them. Session 3 repoints them, which is also where the notebook renames get
-reflected. Until then a builder run writes into a path that does not exist here.
+there too. **Their output paths have not been repaired**, so a builder run today writes into a
+directory that does not exist here. Session 3 repoints them, along with the notebook renames.
+
+**Their CONTENT is patched in step with the notebooks, and that is not optional.** Four notebooks
+were edited here and all four builders were edited identically in the same commit — the rule exists
+because on 2 September seven of twelve builders had silently drifted from their own artifacts, and
+every notebook looked correct while every one of them would have lost its change on the next
+rebuild.
+
+Two things are deliberately *not* in the builders: the Colab badge, because it contains a path that
+changes when a notebook moves, and the executed outputs, because a builder emits source. Both have
+an idempotent tool, and `tools/builders/README.md` gives the three-command sequence to run after any
+rebuild.
 
 ## The one that keeps going wrong
 
@@ -101,16 +114,46 @@ tightly as you assert, or the check is testing determinism rather than equivalen
 
 ## Environment
 
-PyPSA 1.3 needs pandas 3, which the Anaconda base environment does not have. A working kernel
-already exists on this machine as `orteach-energy` (PyPSA 1.3.0, linopy 0.9.1, highspy, gurobipy
-13.0.3) — but **it lives under `AppData/Local/Temp`**, which is not a durable location. Session 2
-builds this repository its own named kernel and records how; do not depend on the Temp one.
+PyPSA 1.3 needs pandas 3, which the Anaconda base environment does not have, so this repository
+has its own environment and its own kernel rather than a `PYTHONPATH`.
 
-There is a full academic Gurobi licence on this machine (expires 2026-12-04). Students have neither
-that nor the WLS trio, so **HiGHS is the path that must work without a licence**, and the free-tier
-switch belongs on by default. The `WLS = {}` placeholder in the notebooks carries no key and must
-never be filled in in a committed file. The Gurobi WLS key in the older course copies has **not**
-been rotated — do not reuse any key found there.
+    python -m venv C:/Users/jonesec/dev/venvs/esm      # SHORT path: long-path limits bite
+    C:/Users/jonesec/dev/venvs/esm/Scripts/pip install -r requirements.txt
+    C:/Users/jonesec/dev/venvs/esm/Scripts/python -m ipykernel install --user --name esm \
+        --display-name "Python (esm: pypsa)"
+
+`requirements.txt` carries the ranges and `requirements-lock.txt` the resolved list that actually
+produced the committed outputs — Python 3.13.9, PyPSA 1.3.0, pandas 3.0.5. Part 1 rule 3 wants
+both: a range says what will install, only the lock says what ran.
+
+**Do not use the `orteach-energy` kernel for this repository.** It works, and it lives under
+`AppData/Local/Temp`, which is not a durable location — it belongs to `teaching-code` and may
+vanish. `esm` is this repository's.
+
+    python tools/execute_notebooks.py            # dry run, reports what breaks
+    python tools/execute_notebooks.py --inplace  # and commits the outputs
+
+### The solver is the thing that breaks for students, not for you
+
+There is a full academic Gurobi licence on this machine, expiring 2026-12-04. **A student has
+neither that nor a WLS key**, so what they get from `pip install gurobipy` is the restricted
+licence: **2,000 variables and 2,000 constraints**. Two notebooks are past it and both now default
+to HiGHS for that reason, which costs nothing — `texas_multi_city_buildout` measured HiGHS and
+Gurobi agreeing to sixteen significant figures on every model it builds.
+
+    model_boundary            312 variables    fits
+    model_diversity           426              fits
+    facility_decision         312              fits
+    texas_multi_city_buildout 2,613            OVER  -> defaults to HiGHS
+    real_network_import       16,080           OVER  -> defaults to HiGHS
+
+**This class of defect cannot be found by running the notebooks here.** Three of them defaulted to
+Gurobi and never installed `gurobipy`; they passed locally because this machine has it. That is
+what CI on a clean machine is for, and why `.github/workflows/checks.yml` exists.
+
+The `WLS = {}` placeholder carries no key and must never be filled in in a committed file. The
+Gurobi WLS key in the older course copies has **not** been rotated — do not reuse any key found
+there.
 
 ## Conventions inherited from `teaching-code`, to apply as notebooks are brought up
 

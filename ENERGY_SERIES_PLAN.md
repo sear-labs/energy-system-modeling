@@ -242,7 +242,28 @@ mapping table verbatim and linking the Pressbooks book. Do not execute or edit a
 notebook yet. Create sear-labs/energy-system-modeling public and push.
 ```
 
-## 2. Environment and diagnostic
+## 2. Environment and diagnostic - DONE 2026-09-07
+
+> The environment is the `esm` venv and kernel; `requirements.txt` and
+> `requirements-lock.txt` record it. **Ten of twelve executed clean on the first pass**, so
+> the diagnostic became a fix pass rather than a queue, and no `REVIEW_QUEUE.md` was written
+> - the defect record is in the commit and the findings are closed rather than listed.
+>
+> What actually broke, and what it taught:
+>
+> - The TU Berlin series failed on an incomplete certificate chain, not on the network. It is
+>   still unlicensed and still due for replacement in session 5, now for a second reason.
+> - **Three notebooks could never have run on Colab** - they default to Gurobi and never
+>   installed `gurobipy`, passing here only because this machine has it. A local run cannot
+>   find that class of defect, which is why CI now runs on a clean machine.
+> - `texas_multi_city_buildout` defaulted to a solver its own table says cannot solve two of
+>   its three stages. It now defaults to HiGHS, as `real_network_import` already did.
+> - A deliberate blank is Part 5 working *and* it collides with "ship it executed". Resolved
+>   in the runner: executed up to the blank, blank cell clean.
+>
+> Session 3's prompt below still stands, minus the parts done here: `check_notebooks.py` is
+> ported, and the Colab badges and setup are in.
+
 
 Run in `C:\Users\jonesec\dev\repo\teaching\energy-system-modeling` from here on.
 

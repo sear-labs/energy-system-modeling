@@ -123,7 +123,7 @@ L("**You may substitute GenX, OSeMOSYS-Pyomo, or the real OSeMOSYS_PuLP "
 ))
 
 A(code(
-L("!pip install -q pypsa highspy pulp"),
+L("!pip install -q pypsa highspy pulp gurobipy"),
 ))
 
 A(code(

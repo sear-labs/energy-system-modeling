@@ -110,6 +110,12 @@ env/
 .ipynb_checkpoints/
 *-checkpoint.ipynb
 
+# Diagnostic output from tools/execute_notebooks.py. A run log, not a result:
+# the results that matter go into the notebooks' own committed outputs.
+exec.log
+exec*.log
+*.exec.log
+
 # Tooling and OS
 .pytest_cache/
 .ruff_cache/

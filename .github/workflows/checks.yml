@@ -1,0 +1,53 @@
+# Part 1 rule 6: tests exist and CI runs them ON A CLEAN MACHINE. The clean
+# machine matters more than the test count -- it is what catches "works on my
+# laptop", which this repository has already been bitten by once: three
+# notebooks defaulted to Gurobi and never installed gurobipy, and passed locally
+# only because the authoring machine had it.
+#
+# WHAT THIS DOES AND DOES NOT GATE
+#
+# Green here means: the ignore rules still hold, every Colab badge points at a
+# file that exists, and the audit ran. It does NOT mean every notebook satisfies
+# the standard -- `check_notebooks.py` prints a matrix and exits 0 on purpose,
+# because there is no package yet and so every notebook fails the agreement
+# check for a known reason. Swap it to `--gate` once session 4 lands; that is
+# the point at which red means something.
+#
+# Executing the notebooks is deliberately not here. It needs PyPSA, a solver and
+# several minutes, and two notebooks fetch over the network -- so it is a local
+# `tools/execute_notebooks.py` step, not a per-push one.
+
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install the checking tools only
+        # Not requirements.txt: nothing here executes a notebook, so PyPSA and a
+        # solver would be several minutes of install for no coverage.
+        run: python -m pip install --quiet "pytest>=8,<10" "nbformat>=5.10,<6"
+
+      - name: gitignore still blocks what must never be published
+        # The guard that makes a mistaken `git add .` recoverable rather than a
+        # rotation event. Both directions: what must be ignored, and what must
+        # not -- `*exam*` matches "example" and silently dropped a builder once.
+        run: python -m pytest tests/ -q
+
+      - name: every Colab badge points where it should
+        run: python tools/add_colab_badges.py --check
+
+      - name: notebook audit
+        run: python tools/check_notebooks.py

@@ -11,36 +11,79 @@ that outlives it.
 
 ---
 
-## Status: this is the scaffold commit, and nothing here has been run
+## Status: every notebook runs; the package does not exist yet
 
 Read this before you trust a number in any notebook.
 
 | | |
 |---|---|
 | notebooks present | 12 of the 19 the plan describes |
-| **executed** | **none** — 190 code cells, zero outputs, measured on this tree 2026-09-06 |
-| agreement assertions against the package | **none — there is no package yet** |
+| **executed, committed with outputs** | **all 12** |
+| run clean end to end | 10 |
+| stop at a deliberate blank, by design | 2 — `facility_decision` and `end_use_disaggregation` |
+| Colab badge | all 12, resolving once this repository is public |
+| **agreement assertions against the package** | **none — there is no package yet** |
 | `src/esm/` | not written; session 3 builds it |
 | `data/raw/`, `data/vendor/` | empty; sessions 3 and 5 fill them |
-| notebooks that carry no assertion at all | 5 of the 12 here |
 
-The notebooks arrived from a private course folder exactly as they were, byte for
-byte. They have never been executed end to end, which is precisely why they were
-not published from that folder: a first commit of unexecuted notebooks fails the
-standard's Part 5 (*ship it executed*), and this repository is honest about being
-mid-build rather than pretending otherwise.
+**What "runs" does and does not mean here.** Every notebook executes top to
+bottom on a clean kernel and its committed outputs came from that run. That is
+Part 5's *ship it executed*, and it is real. What is **not** yet true is Part 4:
+no notebook checks itself against a package, because there is no package. Twelve
+notebooks build models by hand with nothing comparing them to a second
+implementation. `python tools/check_notebooks.py` prints that per notebook rather
+than letting it pass quietly, along with the rest of the audit.
+
+**Two notebooks stop partway on purpose.** Where the student must choose,
+Part 5 says "run all" should not produce a bare `NameError` — so they raise with
+an explanation instead. They are committed executed up to exactly that cell, with
+the student's cell clean. That is the state you open them in, not an interrupted
+run.
+
+### What was found by running them, and fixed
+
+The notebooks arrived from a private course folder byte for byte and had never
+been executed. Ten of the twelve ran clean on the first attempt. The rest is the
+gap between "runs here" and "runs for a student", which is the gap that matters:
+
+- **Three could never have run on Colab.** They default to Gurobi, their own
+  prose says `pip install gurobipy`, and their install cell installed everything
+  except gurobipy. They passed locally because the authoring machine has it —
+  the "works on my laptop" failure exactly. Fixed.
+- **One defaulted to a solver its own table says cannot solve it.**
+  `texas_multi_city_buildout` printed a size table marking two of its three
+  stages "too big" for Gurobi's free 2,000-variable licence, then defaulted to
+  Gurobi. It now defaults to HiGHS, which the notebook had already measured as
+  agreeing to sixteen significant figures.
+- **One download was never going to work**, for two reasons at once: pandas reads
+  URLs through the system certificate store and that host serves an incomplete
+  chain, and the source is an unlicensed personal share link that is due to be
+  replaced anyway. The fetch is fixed; the source is not, and
+  [`data/vendor/README.md`](data/vendor/README.md) says so.
+- **A Gurobi licence id was in five notebooks' outputs.** Never committed — the
+  audit caught it first — and now scrubbed on every run and guarded by a test.
 
 **[ENERGY_SERIES_PLAN.md](ENERGY_SERIES_PLAN.md) is the specification** — the
 chapter mapping, the layout, the seven notebooks still to write, the vendored-data
 licences, and the six-session sequence that gets from here to finished. Read it
-before changing anything structural. This scaffold is its session 1.
+before changing anything structural. Sessions 1 and 2 are done; session 3 writes
+the package.
 
-### Why there are no Colab badges yet
+### The Colab badges resolve only once this repository is public
 
-Two reasons, and both lift at a known point. The repository is **private**, so a
-badge would 404 for every student until it is made public. And the notebooks have
-no setup cell yet — session 3 writes the clone-or-`../../src` opener and the
-licence cell that every notebook then shares. Badges go in when both are true.
+Every notebook carries one, and `README.md` lists them all in the table below.
+They point at `github.com/sear-labs/energy-system-modeling`, which is **private**,
+so today they 404 for anyone who clicks them. Making the repository public is the
+single switch that turns all twelve on.
+
+They were added now rather than later because adding twelve at once and missing
+one is the likelier mistake; `python tools/add_colab_badges.py --check` fails if
+any badge, or the table below, points at a path that has moved.
+
+What a student gets when they click is not yet the whole of Part 5's *one click,
+no install*. Each notebook installs its own dependencies in its first cell, and
+ten of the twelve then run end to end. What is missing is the package: session 3
+writes `src/esm/` and the clone-or-`../../src` setup cell that reaches it.
 
 ---
 
@@ -89,6 +132,44 @@ Section numbers are the chapter's own, from the manuscript.
 > book is the 1 September snapshot, two chapters behind. Re-check this table
 > against the manuscript before trusting it, and expect the site to lag.
 
+### Coverage: which chapters have a companion, and which do not
+
+**A chapter does not need its own notebook.** Several notebooks are deliberately
+one-to-many, and forcing a companion per chapter would produce twenty-two thin
+ones instead of nineteen that each carry a method:
+
+    screening_curves          chapters 10, 11 and 12, and Case Study 3 -- the three
+                              technology surveys share one comparison
+    cost_of_transit_by_mode   chapters 13 and 16 -- the modalities and their economics
+                              are the same table read twice
+    teaching-code 12          chapters 3, 4 and 19
+    facility_decision +
+      texas_multi_city_buildout   Appendix A, which is integration by design
+
+Measured against the manuscript on 2026-09-07, with the chapter text read rather
+than the titles:
+
+| | chapters |
+|---|---|
+| **companion exists and runs** | 1, 2, 3, 4, 5, 6, 9, 17, 18, 19, 21, 22 — twelve |
+| **companion exists, covers part of the chapter** | 15 — `real_network_import` is §15.5 Winter Storm Uri; §15.2 The Weymouth Relation has none |
+| **specified, not yet written** | 7, 8, 10, 11, 12, 13, 14, 16, 20 — nine |
+
+Case studies: **CS4** and **CS5** have companions; **CS3** waits on
+`screening_curves`; **CS1** and **CS2** each carry their own "Section V — Linear
+Programming Formulation" and are therefore genuine notebook openings, held back
+pending one decision — the case studies ship with instructor solution keys, and
+whether those keys are already public in the book decides whether a companion
+notebook can be. **Appendix A** is covered.
+
+So: **thirteen of twenty-two chapters have a companion today**, and the seven
+unwritten notebooks close the remaining nine. Nothing in the book is uncovered
+*by oversight* — every gap above is a notebook the plan already specifies.
+
+One notebook maps to no chapter: `graduate/model_diversity`, which solves the
+same system in a second tool. It is a method demonstration rather than a
+chapter companion, and where it belongs is still open.
+
 ### Some chapters are served from the method library instead
 
 An arrow to `teaching-code` above is not an omission. That library
@@ -105,6 +186,37 @@ method is already taught there, this repository points rather than copies.
 | 22 and CS5, transshipment | `teaching-code` 13, REE Module 4's model |
 
 ---
+
+## The notebooks
+
+One click each, once the repository is public. Until then these resolve to a
+404 -- see *Why there are no Colab badges yet* above.
+
+<!-- NOTEBOOK-TABLE:START - generated by tools/add_colab_badges.py -->
+
+| Notebook | Title | |
+|---|---|---|
+| **`capstone/`** | | |
+| `facility_decision.ipynb` | Module 5: Should This Site Build On-Site Generation? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/capstone/facility_decision.ipynb) |
+| `texas_multi_city_buildout.ipynb` | SB6: Multi-City Texas Buildout | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/capstone/texas_multi_city_buildout.ipynb) |
+| **`graduate/`** | | |
+| `model_diversity.ipynb` | GRAD-M: Model Diversity — the Same System in a Second Tool | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/graduate/model_diversity.ipynb) |
+| **`p1_foundations/`** | | |
+| `model_boundary.ipynb` | Module 0B: Where Do You Draw the Boundary? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p1_foundations/model_boundary.ipynb) |
+| `one_house_balance.ipynb` | SB1 worked example: one house | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p1_foundations/one_house_balance.ipynb) |
+| **`p2_demand/`** | | |
+| `end_use_disaggregation.ipynb` | Assignment 1N: One-Node Disaggregation and Demand-Side Technologies | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p2_demand/end_use_disaggregation.ipynb) |
+| `representative_days.ipynb` | SB2: From a Smart Meter to Three Representative Days | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p2_demand/representative_days.ipynb) |
+| **`p3_generation/`** | | |
+| `capital_and_lcoe.ipynb` | SB3: What Does It Cost to Build a Power Plant? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p3_generation/capital_and_lcoe.ipynb) |
+| **`p4_networks/`** | | |
+| `pipeline_transport.ipynb` | Module 3: Energy Transportation and Network Optimization | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p4_networks/pipeline_transport.ipynb) |
+| `power_flow_and_lmp.ipynb` | Module 3 (Part 2): Power Flow and Locational Marginal Pricing | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p4_networks/power_flow_and_lmp.ipynb) |
+| `real_network_import.ipynb` | GRAD-N: Real Network Import — TX-123BT, then TAMU ACTIVSg | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p4_networks/real_network_import.ipynb) |
+| **`p5_storage_supply/`** | | |
+| `material_requirements.ipynb` | Module 4: Supply Chains - Sourcing and Material Reality | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p5_storage_supply/material_requirements.ipynb) |
+
+<!-- NOTEBOOK-TABLE:END -->
 
 ## Layout
 
@@ -150,12 +262,41 @@ Verified before the first commit, on the copied tree rather than on the source:
 no exam, rubric, Canvas, manuscript or student content; and every Gurobi mention
 is the same empty `WLS = {}` placeholder, carrying no key.
 
-## Running anything
+## Running it yourself
 
-There is nothing to run yet — no package, no tests, no entry point. Session 2
-builds a named kernel that can execute all twelve, and records how here. Until
-then, the environment they will need is PyPSA, Gurobi, PuLP, NetworkX, SciPy,
-Plotly and ipywidgets.
+**On Colab, click a badge** — once this repository is public. Each notebook
+installs what it needs in its first cell.
+
+**Locally**, the notebooks need PyPSA, which needs pandas 3, so they get their own
+environment and their own kernel rather than a `PYTHONPATH`:
+
+```bash
+python -m venv ~/dev/venvs/esm
+~/dev/venvs/esm/Scripts/pip install -r requirements.txt
+~/dev/venvs/esm/Scripts/python -m ipykernel install --user --name esm --display-name "Python (esm: pypsa)"
+```
+
+`requirements.txt` is what the code tolerates; `requirements-lock.txt` is what
+actually produced the committed outputs — Python 3.13.9, PyPSA 1.3.0, pandas
+3.0.5. Part 1 rule 3 wants both, because a range says what will install and only
+the lock says what ran.
+
+Then, from the repository root:
+
+```bash
+python tools/execute_notebooks.py             # dry run: what breaks, one row each
+python tools/execute_notebooks.py --inplace   # and write the outputs back
+python tools/check_notebooks.py               # the audit matrix
+python tools/add_colab_badges.py --check      # every badge points at a real path
+python -m pytest tests/ -q                    # the ignore rules and the licence scrubber
+```
+
+**No solver licence is needed.** HiGHS is free, uncapped, and is what the two
+largest notebooks default to. Gurobi's pip wheel adds a 2,000-variable
+restricted licence that the smaller models fit inside; nothing here requires it.
+
+There is no `run_all.py` yet, because there is no package for it to call. That
+arrives with `src/esm/` in session 3.
 
 ## Licences
 

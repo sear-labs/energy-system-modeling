@@ -27,6 +27,27 @@ checker finds nothing to check.
    belong with the vertical slice (session 3), where the checker is ported
    alongside a `check_notebooks.py` from `teaching-code`.
 
+## Two things are applied to notebooks AFTER a rebuild, not by the builders
+
+A rebuild regenerates a notebook from its builder, which means it drops anything
+the builder does not emit. Two things are deliberately not in the builders, and
+both have their own idempotent tool — so the sequence after any rebuild is:
+
+    python tools/builders/build_<x>_notebook.py     # regenerate
+    python tools/add_colab_badges.py                # re-apply the badge
+    python tools/execute_notebooks.py --inplace     # re-execute
+
+**The Colab badge** is generated from each notebook's own path, so putting it in
+twelve builders would mean twelve copies of a URL that changes when a notebook
+moves. `tools/add_colab_badges.py --check` fails if any badge is missing or
+points at the wrong path, which is the guard that makes the separation safe.
+
+**The executed outputs.** Part 5 says ship it executed; a builder emits source.
+
+Everything else — including the fix to the time-series download in
+`build_1n_notebook.py` — **is** in the builder, patched in the same edit as the
+notebook, because that is the rule this folder exists to enforce.
+
 ## Which builder makes which notebook
 
 The names are the course's, and the notebooks have been renamed for their subject.

@@ -1,0 +1,254 @@
+# -*- coding: utf-8 -*-
+"""Audit every notebook against the standard, and print a matrix of what holds.
+
+    python tools/check_notebooks.py              # all notebooks, matrix + detail
+    python tools/check_notebooks.py p4           # only folders starting with p4
+    python tools/check_notebooks.py --gate       # exit 1 if any check fails
+
+PORTED FROM `teaching-code`, AND CHANGED IN ONE WAY THAT MATTERS
+
+That library's version is a gate: it exits non-zero on the first failure, which
+is right for a finished repository. This one is mid-build -- there is no package
+yet, so *every* notebook fails the agreement check, and a gate that is red for a
+known reason is a gate nobody reads.
+
+So the default here is a **matrix**: one row per notebook, one column per check,
+so the shape of the remaining work is visible at a glance and a real regression
+does not hide inside a wall of expected red. `--gate` restores the CI behaviour,
+and is what this should run as once session 4 is done.
+
+It does NOT execute notebooks -- that is `tools/execute_notebooks.py`, and it is
+slow. This checks the committed artifact. Part 5 says ship executed, so an
+unexecuted notebook is itself a finding here.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+NB_DIR = ROOT / "notebooks"
+
+MAX_CELL_LINES = 40
+
+WRAP_RE = re.compile(r"^#+\s*now the streamlined version", re.I | re.M)
+DEF_RE = re.compile(r"^\s*(def|class)\s+\w+|^\s*\w+\s*=\s*lambda\b", re.M)
+PREDICT_RE = re.compile(r"predict|write down|before (you )?(run|solv|build)", re.I)
+SOLVE_RE = re.compile(r"\.optimize\(\)|\.solve\(|\.fit\(|default_rng\(|np\.random\.", re.I)
+AGREE_RE = re.compile(r"assert\s+\w*\s*[<]\s*AGREEMENT_RTOL", re.I)
+TOL_LITERAL_RE = re.compile(r"(?<![\w.])1e-(?:6|7|8|9|10|11|12)(?![\w])")
+RANDOM_RE = re.compile(r"np\.random|default_rng|random\.(seed|Random|normalvariate|choice|uniform)")
+SEED_SET_RE = re.compile(r"SEED\s*=|seed\s*=\s*SEED|default_rng\(SEED\)|random\.Random\(", re.I)
+SEED_PRINT_RE = re.compile(r"print\(.*seed", re.I)
+PROSE_NUM_RE = re.compile(r"(?<![\w.\-])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+\.\d+)(?![\w])")
+CODE_SPAN_RE = re.compile(r"`[^`]*`|\$\$.*?\$\$|\$[^$\n]*\$", re.S)
+EXERCISES_RE = re.compile(r"^#+\s*where to take this next.*", re.I | re.M | re.S)
+LICENCE_RE = re.compile(r"LicenseID to value|Academic license|Restricted license")
+BADGE_RE = re.compile(r"colab\.research\.google\.com/github/([^/]+/[^/]+)/blob/([^/]+)/(\S+?)\)")
+PLOT_RE = re.compile(r"plt\.|\.plot\(|px\.|go\.Figure|sns\.")
+ALT_RE = re.compile(r"ALT[_ ]?TEXT|alt\s*=|#\s*alt:", re.I)
+HEAD_RE = re.compile(r"^(#{1,6})\s+\S", re.M)
+
+
+def src(c):
+    return "".join(c.get("source", []))
+
+
+def _numbers_in_prose(md_text):
+    text = EXERCISES_RE.sub(" ", CODE_SPAN_RE.sub(" ", md_text))
+    out = []
+    for m in PROSE_NUM_RE.finditer(text):
+        raw = m.group(1)
+        if len(raw.replace(",", "").replace(".", "")) < 3:
+            continue
+        out.append(raw.replace(",", ""))
+    return out
+
+
+# Each check returns (passed, detail). detail is shown only when it fails.
+def check(path):
+    nb = json.loads(path.read_text(encoding="utf-8"))
+    cells = nb.get("cells", [])
+    code_cells = [c for c in cells if c.get("cell_type") == "code"]
+    all_code = "\n".join(src(c) for c in code_cells)
+    all_md = "\n".join(src(c) for c in cells if c.get("cell_type") == "markdown")
+    rel = path.relative_to(ROOT).as_posix()
+
+    out_text = []
+    for c in code_cells:
+        for o in c.get("outputs", []):
+            if "text" in o:
+                out_text.append("".join(o["text"]))
+            if "data" in o:
+                out_text.append("".join(o["data"].get("text/plain", "")))
+    outputs = "\n".join(out_text)
+
+    r = {}
+
+    # --- Part 5: ship it executed ------------------------------------------
+    n_out = sum(1 for c in code_cells if c.get("outputs"))
+    r["executed"] = (n_out > 0, f"0 of {len(code_cells)} code cells have output")
+
+    errs = [o for c in code_cells for o in c.get("outputs", []) if o.get("output_type") == "error"]
+    r["no-errors"] = (not errs, f"{len(errs)} cell(s) carry an error output")
+
+    r["no-licence-banner"] = (
+        not LICENCE_RE.search(outputs), "a Gurobi licence banner is in the outputs")
+
+    # --- Part 5: one click, no install -------------------------------------
+    m = BADGE_RE.search(all_md)
+    if not m:
+        r["colab-badge"] = (False, "no Colab badge in the first markdown cell")
+    elif m.group(3) != rel:
+        r["colab-badge"] = (False, f"badge points at {m.group(3)}, not {rel}")
+    else:
+        r["colab-badge"] = (True, "")
+
+    setup = [c for c in code_cells if "REPO_URL" in src(c)]
+    if not setup:
+        r["setup-cell"] = (False, "no Colab setup cell (no REPO_URL)")
+    elif f"notebooks/{path.parent.name}" not in src(setup[0]):
+        r["setup-cell"] = (False, f"setup cell does not chdir to notebooks/{path.parent.name}")
+    else:
+        r["setup-cell"] = (True, "")
+
+    # --- Part 1 rule 3: dependencies pinned with upper bounds --------------
+    # "pandas>=2.0,<4, not pandas. An unpinned dependency will one day install a
+    # major version with a changed API and either break or -- worse -- silently
+    # alter results." A student running this in 2028 gets whatever pip resolves.
+    unpinned = []
+    for m in re.finditer(r"pip install\s+([^\n]+)", all_code):
+        for tok in m.group(1).split():
+            if tok.startswith("-") or tok.startswith("$"):
+                continue
+            name = tok.strip("\"'")
+            if not re.search(r"[<>=~]", name):
+                unpinned.append(name)
+    r["deps-pinned"] = (not unpinned,
+                        f"unpinned install(s): {' '.join(sorted(set(unpinned)))}")
+
+    # --- Part 3: the teaching shape ----------------------------------------
+    orphans = [i for i, c in enumerate(cells)
+               if c.get("cell_type") == "code"
+               and (i == 0 or cells[i - 1].get("cell_type") != "markdown")]
+    r["md-above-code"] = (not orphans, f"{len(orphans)} orphan code cell(s): {orphans[:6]}")
+
+    wrap_at = next((i for i, c in enumerate(cells)
+                    if c.get("cell_type") == "markdown" and WRAP_RE.search(src(c))), None)
+    teaching = cells if wrap_at is None else cells[:wrap_at]
+    defs = [i for i, c in enumerate(teaching)
+            if c.get("cell_type") == "code" and DEF_RE.search(src(c))]
+    r["no-defs-in-teaching"] = (not defs, f"def/class/lambda in the teaching section at {defs}")
+
+    first_solve = next((i for i, c in enumerate(cells)
+                        if c.get("cell_type") == "code" and SOLVE_RE.search(src(c))), None)
+    if first_solve is None:
+        r["predict-prompt"] = (True, "")  # nothing to predict about
+    else:
+        before = "\n".join(src(c) for c in cells[:first_solve]
+                           if c.get("cell_type") == "markdown")
+        r["predict-prompt"] = (bool(PREDICT_RE.search(before)),
+                               f"no predict-before-you-run prompt before cell {first_solve}")
+
+    longest = max((len(src(c).splitlines()) for c in code_cells), default=0)
+    r["cell-length"] = (longest <= MAX_CELL_LINES,
+                        f"longest code cell is {longest} lines (limit {MAX_CELL_LINES})")
+
+    # --- Part 3: heading hierarchy, which is the screen-reader navigation ---
+    levels = [len(m.group(1)) for m in HEAD_RE.finditer(all_md)]
+    skips = [(a, b) for a, b in zip(levels, levels[1:]) if b > a + 1]
+    r["heading-hierarchy"] = (not skips, f"heading level skipped {len(skips)}x, e.g. h{skips[0][0]}->h{skips[0][1]}" if skips else "")
+
+    # --- Part 3: accessibility ---------------------------------------------
+    plots = [i for i, c in enumerate(code_cells) if PLOT_RE.search(src(c))]
+    if not plots:
+        r["figure-alt-text"] = (True, "")
+    else:
+        described = sum(1 for i in plots if ALT_RE.search(src(code_cells[i])))
+        r["figure-alt-text"] = (described == len(plots),
+                                f"{len(plots) - described} of {len(plots)} plotting cells have no alt text")
+
+    # --- Part 4: the boundary ----------------------------------------------
+    r["agreement-assert"] = (bool(AGREE_RE.search(all_code)),
+                             "no agreement assertion against AGREEMENT_RTOL")
+
+    bad_tol = [l for l in all_code.splitlines()
+               if "assert" in l and TOL_LITERAL_RE.search(l)]
+    r["tolerance-named"] = (not bad_tol,
+                            f"tolerance literal in an assert: {bad_tol[0].strip()[:60]}" if bad_tol else "")
+
+    # --- Part 6: seeds ------------------------------------------------------
+    if RANDOM_RE.search(all_code):
+        if not SEED_SET_RE.search(all_code):
+            r["seed"] = (False, "draws random numbers but sets no seed")
+        elif not SEED_PRINT_RE.search(all_code):
+            r["seed"] = (False, "sets a seed but never prints it")
+        else:
+            r["seed"] = (True, "")
+    else:
+        r["seed"] = (True, "")
+
+    # --- Part 7: every number in the prose came from a run ------------------
+    flat = outputs.replace(",", "")
+    missing = sorted({n for n in _numbers_in_prose(all_md) if n not in flat})
+    if not outputs:
+        r["prose-numbers"] = (False, "cannot check: no outputs to check against")
+    else:
+        r["prose-numbers"] = (not missing, f"{len(missing)} prose number(s) in no output: {missing[:6]}")
+
+    return r
+
+
+CHECKS = ["executed", "no-errors", "no-licence-banner", "colab-badge", "setup-cell",
+          "deps-pinned", "md-above-code", "no-defs-in-teaching", "predict-prompt",
+          "cell-length", "heading-hierarchy", "figure-alt-text", "agreement-assert",
+          "tolerance-named", "seed", "prose-numbers"]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("prefix", nargs="?", default="")
+    ap.add_argument("--gate", action="store_true", help="exit 1 if anything fails")
+    args = ap.parse_args()
+
+    paths = sorted(p for p in NB_DIR.glob("*/*.ipynb")
+                   if p.parent.name.startswith(args.prefix)
+                   and ".ipynb_checkpoints" not in str(p))
+    if not paths:
+        print("no notebooks found")
+        return 1
+
+    results = {p: check(p) for p in paths}
+
+    # matrix
+    name_w = max(len(f"{p.parent.name}/{p.stem}") for p in paths) + 2
+    print(" " * name_w + "".join(f"{i + 1:>4}" for i in range(len(CHECKS))))
+    for p in paths:
+        row = results[p]
+        cells = "".join(("   ." if row[c][0] else "   X") for c in CHECKS)
+        print(f"{p.parent.name}/{p.stem:<{name_w - len(p.parent.name) - 1}}{cells}")
+    print("\n  . passes    X fails\n")
+    for i, c in enumerate(CHECKS):
+        n_bad = sum(1 for p in paths if not results[p][c][0])
+        print(f"  {i + 1:>2}  {c:<20} {len(paths) - n_bad}/{len(paths)} pass")
+
+    print("\n" + "=" * 78)
+    n_bad_nb = 0
+    for p in paths:
+        fails = [(c, results[p][c][1]) for c in CHECKS if not results[p][c][0]]
+        if not fails:
+            print(f"ok    {p.parent.name}/{p.name}")
+            continue
+        n_bad_nb += 1
+        print(f"FAIL  {p.parent.name}/{p.name}")
+        for c, detail in fails:
+            print(f"        - {c}: {detail}")
+    print(f"\n{len(paths)} notebook(s), {n_bad_nb} with at least one failing check")
+    return 1 if (args.gate and n_bad_nb) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

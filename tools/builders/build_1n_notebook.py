@@ -112,7 +112,7 @@ L("This is the **exact same 1-node model** from the reference notebook "
   "these cells** — everything you do happens from Part 1 onward."),
 ))
 
-A(code(L("!pip install -q pypsa highspy requests")))
+A(code(L("!pip install -q pypsa highspy requests gurobipy")))
 
 A(code(
 L("# General notebook settings"),
@@ -124,6 +124,7 @@ L("import pandas as pd"),
 L("import numpy as np"),
 L("import matplotlib.pyplot as plt"),
 L("import requests"),
+L("import io"),
 L(""),
 L("warnings.filterwarnings(\"ignore\")"),
 L("logging.getLogger(\"gurobipy\").propagate = False"),
@@ -204,8 +205,32 @@ A(md(L("### Reference wind, solar and demand time series"),
 
 A(code(
 L("RESOLUTION = 3  # hours, matches the reference notebook"),
-L("url = \"https://tubcloud.tu-berlin.de/s/9toBssWEdaLgHzq/download/time-series.csv\""),
-L("ts = pd.read_csv(url, index_col=0, parse_dates=True)[::RESOLUTION]"),
+L("URL = \"https://tubcloud.tu-berlin.de/s/9toBssWEdaLgHzq/download/time-series.csv\""),
+L(""),
+L("# pandas reads a URL through urllib, which uses the SYSTEM certificate store."),
+L("# This host serves an incomplete chain, so verification stops at \"unable to get"),
+L("# local issuer certificate\" and the notebook dies on a stack trace. requests"),
+L("# carries certifi's own bundle and completes the chain, so the download happens"),
+L("# here and pandas is handed text."),
+L("#"),
+L("# The series is also on a personal share link with no stated licence, and is"),
+L("# due to be replaced with a citable source - see data/vendor/README.md."),
+L("try:"),
+L("    _resp = requests.get(URL, timeout=60)"),
+L("    _resp.raise_for_status()"),
+L("except Exception as exc:"),
+L("    raise RuntimeError("),
+L("        f\"Could not download the reference time series.\\n\""),
+L("        f\"  {type(exc).__name__}: {exc}\\n\""),
+L("        \"This cell needs network access. The series carries wind_pu, pv_pu \""),
+L("        \"and load_mw on an hourly calendar; data/vendor/README.md describes \""),
+L("        \"the replacement that is due to remove this dependency.\""),
+L("    ) from exc"),
+L(""),
+L("ts = pd.read_csv(io.StringIO(_resp.text), index_col=0,"),
+L("                 parse_dates=True)[::RESOLUTION]"),
+L("print(f\"{len(ts):,} snapshots at {RESOLUTION}h, \""),
+L("      f\"{ts.index[0]:%Y-%m-%d} to {ts.index[-1]:%Y-%m-%d}\")"),
 L("ts.head(3)"),
 ))
 

@@ -115,7 +115,7 @@ L("**The structural model for this notebook is the Spring 2026 student "
 ))
 
 A(code(
-L("!pip install -q pypsa highspy"),
+L("!pip install -q pypsa highspy gurobipy"),
 ))
 
 A(code(
@@ -156,7 +156,7 @@ A(md(
 L('---\n'),
 L('### Choosing a solver\n'),
 L('\n'),
-L('This notebook defaults to **Gurobi**. `pip install gurobipy` ships a restricted licence that needs no registration at all and solves models up to **2,000 variables and 2,000 constraints**.\n'),
+L('This notebook defaults to **HiGHS**, and the table below is why. `pip install gurobipy` ships a restricted licence that needs no registration at all, but it solves models only up to **2,000 variables and 2,000 constraints** — and two of the three stages here are past that. Switching costs nothing: HiGHS and Gurobi agree to sixteen significant figures on every model in this notebook.\n'),
 L('\n'),
 L('That ceiling arrives sooner than you would think. Measured sizes for the models in this course:\n'),
 L('\n'),
@@ -176,8 +176,9 @@ L('**For homework — get an academic licence.** A free Web License Service (WLS
 ))
 
 A(code(
-L("SOLVER = 'gurobi'\n"),
-L("# SOLVER = 'highs'     # <-- uncomment: open source, no licence, no size cap\n"),
+L("SOLVER = 'highs'      # open source, no licence, no size cap - and two of the\n"),
+L("                      # three stages below are past Gurobi's free limit\n"),
+L("# SOLVER = 'gurobi'   # <-- uncomment if you have an academic WLS key\n"),
 L('\n'),
 L('# For homework: paste your academic Web License Service key here.\n'),
 L('# Leave it empty and Gurobi falls back to its restricted licence.\n'),
