@@ -35,10 +35,18 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install the checking tools only
-        # Not requirements.txt: nothing here executes a notebook, so PyPSA and a
-        # solver would be several minutes of install for no coverage.
-        run: python -m pip install --quiet "pytest>=8,<10" "nbformat>=5.10,<6"
+      - name: Install the package and its dev extras
+        # `-e .[dev]` rather than a hand-listed set, so this reads pyproject.toml
+        # instead of restating it. A restated list is a second copy that nothing
+        # compares, and it drifts first -- which is exactly how this step failed
+        # twice: once missing nbclient, once missing pandas, both times because
+        # the list here had been written from memory of what the tests touch.
+        #
+        # It stays light on purpose: `dev` brings pytest and the notebook-format
+        # libraries, and `esm` itself needs only pandas and requests. PyPSA and
+        # the solvers live in the `notebooks` extra and are NOT installed here,
+        # because nothing in this workflow executes a notebook.
+        run: python -m pip install --quiet -e ".[dev]"
 
       - name: gitignore still blocks what must never be published
         # The guard that makes a mistaken `git add .` recoverable rather than a
