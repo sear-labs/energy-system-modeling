@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_sb3_notebook.py -> `2026 Fall/Notebooks/SB3_Capital_and_LCOE.ipynb`.
+"""build_sb3_notebook.py -> `notebooks/p3_generation/09_capital_and_lcoe.ipynb`.
 
 DESIGN NOTE - why this is a chain of small questions rather than a lecture
 An earlier version opened with the capital recovery factor and told the student
@@ -32,8 +32,11 @@ Run from Tools/:  python build_sb3_notebook.py
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks", "SB3_Capital_and_LCOE.ipynb")
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "notebooks", "p3_generation", "09_capital_and_lcoe.ipynb")
 
 _N = [0]
 

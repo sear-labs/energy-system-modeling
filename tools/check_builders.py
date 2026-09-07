@@ -36,7 +36,9 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-NB_DIR = os.path.join(ROOT, "2026 Fall", "Notebooks")
+# every notebook, at any depth under notebooks/ -- they are filed by part now,
+# not in one flat folder
+NB_DIR = os.path.join(ROOT, "notebooks")
 
 # Builders that generate a notebook. Anything else in Tools/ is out of scope.
 SKIP = {"check_builders.py"}
@@ -44,7 +46,7 @@ SKIP = {"check_builders.py"}
 
 def notebook_builders():
     out = []
-    for p in sorted(glob.glob(os.path.join(HERE, "build_*notebook*.py"))):
+    for p in sorted(glob.glob(os.path.join(HERE, "builders", "build_*notebook*.py"))):
         if os.path.basename(p) not in SKIP:
             out.append(p)
     return out
@@ -53,7 +55,7 @@ def notebook_builders():
 def snapshot():
     """Every notebook's exact bytes, so a restore does not depend on git."""
     return {p: io.open(p, "rb").read()
-            for p in glob.glob(os.path.join(NB_DIR, "*.ipynb"))}
+            for p in glob.glob(os.path.join(NB_DIR, "**", "*.ipynb"), recursive=True)}
 
 
 def restore(snap):

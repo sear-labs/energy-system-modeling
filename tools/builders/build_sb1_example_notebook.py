@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_sb1_example_notebook.py -> `2026 Fall/Notebooks/SB1_Example_Energy_Balance.ipynb`.
+"""build_sb1_example_notebook.py -> `notebooks/p1_foundations/02_one_house_balance.ipynb`.
 
 DESIGN NOTE - what changed and why
 The previous version was 55 cells and 3,558 words, with section headings like
@@ -30,9 +30,11 @@ Run from Tools/:  python build_sb1_example_notebook.py
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks",
-                   "SB1_Example_Energy_Balance.ipynb")
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "notebooks", "p1_foundations", "02_one_house_balance.ipynb")
 
 _N = [0]
 

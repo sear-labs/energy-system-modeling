@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_m5_notebook.py - write `2026 Fall/Notebooks/M5_Facility_Decision.ipynb`.
+"""build_m5_notebook.py - write `notebooks/capstone/AppA_facility_decision.ipynb`.
 
 WHY MODULE 5 EXISTS
 Module 0 is an intro with no outro. This is the outro. It bookends M0B: that
@@ -58,8 +58,11 @@ Run from Tools/:  python build_m5_notebook.py
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks", "M5_Facility_Decision.ipynb")
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "notebooks", "capstone", "AppA_facility_decision.ipynb")
 
 _N = [0]
 

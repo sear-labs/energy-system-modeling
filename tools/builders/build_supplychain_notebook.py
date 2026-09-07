@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_supplychain_notebook.py -> `2026 Fall/Notebooks/M4_Supply_Chain.ipynb`.
+"""build_supplychain_notebook.py -> `notebooks/p5_storage_supply/21_material_requirements.ipynb`.
 
 THE PAIR, BOTH HALVES
 Erick's call (2 Sep): supply chain is BOTH a modelling module and an accounting
@@ -29,8 +29,11 @@ Run from Tools/:  python build_supplychain_notebook.py
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks", "M4_Supply_Chain.ipynb")
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "notebooks", "p5_storage_supply", "21_material_requirements.ipynb")
 
 _N = [0]
 

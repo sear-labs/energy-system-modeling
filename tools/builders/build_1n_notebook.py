@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_1n_notebook.py - write `2026 Fall/Notebooks/1N_One_Node_Disaggregation.ipynb`,
+"""build_1n_notebook.py - write `notebooks/p2_demand/06_end_use_disaggregation.ipynb`,
 the student-facing notebook for the 1N assignment (Assignment Catalog Part Four).
 
 Part 0's PyPSA construction (cost loading, wind/solar/battery/hydrogen 1-node
@@ -34,8 +34,11 @@ Run from Tools/:  python build_1n_notebook.py
 """
 import json, os, sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks", "1N_One_Node_Disaggregation.ipynb")
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "notebooks", "p2_demand", "06_end_use_disaggregation.ipynb")
 REF_DEMAND_CSV = os.path.join(
     ROOT, "2026 Spring (First Class)", "Google Drive", "Class Collab Code",
     "Demand and Smart Meter Analysis", "IntervalData.csv")

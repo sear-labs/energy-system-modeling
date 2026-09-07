@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_transport_notebook.py -> `2026 Fall/Notebooks/M3_Transport_Companion.ipynb`.
+"""build_transport_notebook.py -> `notebooks/p4_networks/17_pipeline_transport.ipynb`.
 
 WHAT THIS IS
 A REORDERING of the Spring `Module_3_Transport_Companion.ipynb`, not a rewrite.
@@ -33,12 +33,14 @@ Run from Tools/:  python build_transport_notebook.py
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(ROOT, "2026 Spring (First Class)", "Google Drive",
                    "Class Collab Code", "Transport and Power Flow",
                    "Module_3_Transport_Companion.ipynb")
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks",
-                   "M3_Transport_Companion.ipynb")
+OUT = os.path.join(ROOT, "notebooks", "p4_networks", "17_pipeline_transport.ipynb")
 
 _N = [0]
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_sb6_notebook.py - write `2026 Fall/Notebooks/SB6_Multi_City_Texas_Buildout.ipynb`,
+"""build_sb6_notebook.py - write `notebooks/capstone/AppA_texas_multi_city_buildout.ipynb`,
 the student-facing notebook for SB6-SPEC (Assignment Catalog Part Four).
 
 Structured as the catalog specifies: Stage 1 turns the 3-node template into
@@ -54,9 +54,11 @@ Run from Tools/:  python build_sb6_notebook.py
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks",
-                   "SB6_Multi_City_Texas_Buildout.ipynb")
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "notebooks", "capstone", "AppA_texas_multi_city_buildout.ipynb")
 
 _N = [0]
 

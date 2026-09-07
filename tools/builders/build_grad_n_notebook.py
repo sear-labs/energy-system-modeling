@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_grad_n_notebook.py - write `2026 Fall/Notebooks/GRAD_N_Real_Network_Import.ipynb`,
+"""build_grad_n_notebook.py - write `notebooks/p4_networks/15_real_network_import.ipynb`,
 the student-facing notebook for the GRAD-N assignment (Assignment Catalog Part Four,
 IE 5300 / IE 6301 only).
 
@@ -55,9 +55,11 @@ Run from Tools/:  python build_grad_n_notebook.py
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks",
-                   "GRAD_N_Real_Network_Import.ipynb")
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "notebooks", "p4_networks", "15_real_network_import.ipynb")
 
 _N = [0]
 

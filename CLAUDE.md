@@ -81,23 +81,29 @@ and it is resolved when the course starts teaching from this repository instead.
   they are committed executed up to exactly that cell. That is the state a student opens them in,
   not an interrupted run.
 
-## The builders still point at the folder they came from
+## Edit the builder, not the notebook
 
-Every `tools/builders/build_*.py` computes its output path as
-`ROOT/"2026 Fall"/"Notebooks"/<old name>.ipynb`, and `tools/check_builders.py` looks for notebooks
-there too. **Their output paths have not been repaired**, so a builder run today writes into a
-directory that does not exist here. Session 3 repoints them, along with the notebook renames.
+`tools/builders/build_*.py` generate the notebooks. Edit a notebook directly and
+the next rebuild reverts you — silently, which is how seven of twelve builders
+drifted from their artifacts on 2 September.
 
-**Their CONTENT is patched in step with the notebooks, and that is not optional.** Four notebooks
-were edited here and all four builders were edited identically in the same commit — the rule exists
-because on 2 September seven of twelve builders had silently drifted from their own artifacts, and
-every notebook looked correct while every one of them would have lost its change on the next
-rebuild.
+**They were repointed on 2026-09-07 and now run here**, so that rule is finally
+actionable; until then they wrote into `2026 Fall/Notebooks/`, a directory that
+does not exist in this repository, and "edit the builder" was advice nobody could
+follow.
 
-Two things are deliberately *not* in the builders: the Colab badge, because it contains a path that
-changes when a notebook moves, and the executed outputs, because a builder emits source. Both have
-an idempotent tool, and `tools/builders/README.md` gives the three-command sequence to run after any
-rebuild.
+    python tools/builders/build_<x>_notebook.py     # regenerate
+    python tools/sync_setup_cells.py                # setup cell + its heading
+    python tools/add_colab_badges.py                # badge + the README table
+    python tools/execute_notebooks.py --inplace     # outputs
+    python tools/check_notebooks.py                 # audit
+
+The last four are idempotent and safe to run over everything. Markdown-only edits
+need no re-execution — a badge and a heading live in markdown cells, so no
+committed output depends on them.
+
+**A rebuild always shows a diff**, because the builders mint fresh cell ids each
+run. That is the generator, not a change.
 
 ## Seven notebooks are also graded assignments — ruled on, not open
 

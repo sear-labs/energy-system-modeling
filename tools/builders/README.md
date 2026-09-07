@@ -7,25 +7,21 @@ seven of twelve builders had drifted from their own artifacts, invisibly: every
 notebook was correct, every builder was wrong, and nothing was comparing them.
 `../check_builders.py` is what compares them.
 
-## These builders do not run in this repository yet
+## The builders run here now
 
-They were copied **verbatim**, so the scaffold commit is a move and nothing else.
-Every one of them still computes its output path as
+Repointed 2026-09-07. Each writes to `notebooks/<part>/<NN_subject>.ipynb`, and
+`ROOT` climbs three levels rather than two, because these used to live one level
+higher in the course folder's `Tools/`. `../check_builders.py` looks under
+`notebooks/` recursively and globs the builders out of this folder.
 
-    ROOT / "2026 Fall" / "Notebooks" / <old course-code name>.ipynb
+**Verified by running one**: `build_sb3_notebook.py` regenerates
+`p3_generation/09_capital_and_lcoe.ipynb` in place, and the documented sequence
+below puts back everything a rebuild strips.
 
-which is the layout of the private course folder they came from, not the layout
-here. `../check_builders.py` looks for notebooks in the same place. So a builder
-run right now writes into a path that does not exist in this repository, and the
-checker finds nothing to check.
-
-**This is known, not broken-by-accident.** Two reasons for leaving it:
-
-1. The diagnostic pass (session 2) should measure the builders as they actually
-   are, not as this session left them.
-2. Repointing them is the same edit as reflecting the notebook renames, and both
-   belong with the vertical slice (session 3), where the checker is ported
-   alongside a `check_notebooks.py` from `teaching-code`.
+**Expect a diff even when nothing changed.** The builders mint a fresh random
+cell id on every run, so a rebuild always shows as modified. That is the
+generator's behaviour, not a change to the notebook, and it is worth knowing
+before somebody chases it.
 
 ## Three things are applied to notebooks AFTER a rebuild, not by the builders
 

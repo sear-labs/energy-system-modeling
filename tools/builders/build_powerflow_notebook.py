@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_powerflow_notebook.py - write `2026 Fall/Notebooks/M3_PowerFlow_Companion.ipynb`.
+"""build_powerflow_notebook.py - write `notebooks/p4_networks/18_power_flow_and_lmp.ipynb`.
 
 WHAT THIS IS
 The Spring `Module_3_PowerFlow_Companion.ipynb` already contains the best
@@ -44,8 +44,11 @@ Run from Tools/:  python build_powerflow_notebook.py
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks", "M3_PowerFlow_Companion.ipynb")
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "notebooks", "p4_networks", "18_power_flow_and_lmp.ipynb")
 
 _N = [0]
 

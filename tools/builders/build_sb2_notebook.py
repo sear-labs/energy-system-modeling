@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build_sb2_notebook.py -> `2026 Fall/Notebooks/SB2_Representative_Days.ipynb`.
+"""build_sb2_notebook.py -> `notebooks/p2_demand/05_representative_days.ipynb`.
 
 SB2 turns 8,760 metered hours into three representative days and then - the
 part that is actually graded - shows that the three days reconcile back to the
@@ -25,9 +25,11 @@ Run from Tools/:  python build_sb2_notebook.py
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "2026 Fall", "Notebooks",
-                   "SB2_Representative_Days.ipynb")
+# tools/builders/<this file> -> tools/ -> the repository root.
+# Three levels, not two: these builders used to live one level higher,
+# in the course folder's Tools/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "notebooks", "p2_demand", "05_representative_days.ipynb")
 
 _N = [0]
 

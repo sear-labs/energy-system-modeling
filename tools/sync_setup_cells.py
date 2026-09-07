@@ -265,8 +265,16 @@ def main():
             if len(raw_tail) == 2 and ("!pip install" in raw_tail[1]
                                        or "%pip install" in raw_tail[1]):
                 cell_ok = False
+        # The heading must be THE setup heading, not merely some markdown.
+        #
+        # Accepting any markdown made this non-deterministic: a notebook that
+        # already had a setup cell kept the title cell as its "heading above",
+        # while a freshly rebuilt one got a dedicated `## Setup` inserted. Same
+        # tool, same input, two structures, depending only on history -- which a
+        # rebuild then surfaced as a spurious diff.
         heading_ok = (idx is not None and idx > 0
-                      and cells[idx - 1]["cell_type"] == "markdown")
+                      and cells[idx - 1]["cell_type"] == "markdown"
+                      and "".join(cells[idx - 1]["source"]).lstrip().startswith("## Setup"))
         merged_ok = (idx is not None
                      and (idx + 1 >= len(cells) or cells[idx + 1]["cell_type"] != "code"))
 
