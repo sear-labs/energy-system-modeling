@@ -30,8 +30,18 @@ import time
 import traceback
 
 import nbformat
-from nbclient import NotebookClient
-from nbclient.exceptions import CellExecutionError
+
+# nbclient is imported INSIDE run_one, not here.
+#
+# Why: tests/test_licence_scrub.py imports this module for LICENCE_LINE_RE and
+# scrub_licence, both of which are pure text processing. A top-level nbclient
+# import made that test require a notebook-execution client it never uses, and
+# CI -- which installs only the checking tools -- failed on
+# `ModuleNotFoundError: No module named 'nbclient'` at collection time.
+#
+# That is the undeclared-dependency defect Part 6 names, caught by the clean
+# machine on the first push. A module should not require an execution
+# dependency to expose a regex.
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -142,6 +152,9 @@ def scrub_licence(nb):
 
 def run_one(path, inplace):
     """Execute one notebook. Returns (status, detail, seconds, n_cells)."""
+    from nbclient import NotebookClient
+    from nbclient.exceptions import CellExecutionError
+
     nb = nbformat.read(path, as_version=4)
     n_code = sum(1 for c in nb.cells if c.cell_type == "code")
     client = NotebookClient(
