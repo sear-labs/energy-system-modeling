@@ -1,0 +1,12 @@
+parameter,value
+gas_price_per_mcf,2.50
+gas_mmbtu_per_mcf,1.036
+coal_price_per_ton,20.0
+coal_mmbtu_per_ton,13.0
+gas_heat_rate_mmbtu_per_mwh,6.4
+coal_heat_rate_mmbtu_per_mwh,10.0
+gas_vom_per_mwh,3.50
+coal_vom_per_mwh,4.50
+line_capex_per_mw_km,1200.0
+line_life_years,40
+discount_rate,0.07

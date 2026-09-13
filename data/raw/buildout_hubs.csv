@@ -1,0 +1,6 @@
+hub,lat,lon,demand_share,wind_max_mw,solar_max_mw
+Dallas-Fort Worth,32.7767,-96.7970,0.341,3000,4000
+Houston,29.7604,-95.3698,0.299,0,3000
+San Antonio,29.4241,-98.4936,0.168,4000,4000
+Austin,30.2672,-97.7431,0.065,0,2000
+West Texas,31.9973,-102.0779,0.127,22000,18000

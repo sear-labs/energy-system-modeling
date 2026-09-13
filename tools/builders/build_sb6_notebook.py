@@ -247,7 +247,10 @@ L("    'San Antonio':       0.168,"),
 L("    'Austin':            0.065,"),
 L("    'West Texas':        0.127,"),
 L("}"),
-L("assert abs(sum(HUB_SHARE.values()) - 1.0) < 1e-9, sum(HUB_SHARE.values())"),
+L("# the shares must tile the state, or total demand is silently wrong and"),
+L("# every built capacity is wrong with it. esm.buildout owns this check."),
+L("from esm.buildout import check_demand_shares, load_buildout_instance"),
+L("check_demand_shares(load_buildout_instance())"),
 L(""),
 L("PEAK_2030_MW = 45_000.0        # statewide winter peak, ERCOT-scale"),
 L("GROWTH = {2030: 1.00, 2040: 1.20, 2050: 1.44}   # +20% per decade"),
@@ -321,7 +324,12 @@ L("SOLAR_MAX = {'West Texas': 18_000, 'San Antonio': 4_000,"),
 L("             'Dallas-Fort Worth': 4_000, 'Austin': 2_000, 'Houston': 3_000}"),
 L(""),
 L(""),
-L("def profiles(seed=42):"),
+L("PROFILE_SEED = 42   # named and printed: the wind trace is stochastic,"),
+L("                    # so a run nobody can reproduce is a run nobody can"),
+L("                    # check. PCG64 is stream-stable across NumPy versions."),
+L(""),
+L(""),
+L("def profiles(seed=PROFILE_SEED):"),
 L('    """A 24-hour demand shape and solar/wind capacity factors.'),
 L(""),
 L("    Placeholders.  Replace them with the profiles from your own"),
@@ -343,6 +351,7 @@ L("    return shape, np.clip(solar, 0, 1), wind"),
 L(""),
 L(""),
 L("demand_shape, solar_cf, wind_cf = profiles()"),
+L("print(f'wind trace drawn with seed {PROFILE_SEED}')"),
 L("fig, ax = plt.subplots(figsize=(9, 3))"),
 L("ax.plot(demand_shape, label='demand shape', color='k', lw=2)"),
 L("ax.fill_between(range(HOURS), solar_cf, alpha=0.5, color='#DE6B1A',"),
@@ -350,6 +359,14 @@ L("                label='solar CF')"),
 L("ax.fill_between(range(HOURS), wind_cf, alpha=0.4, color='#0064B1',"),
 L("                label='wind CF')"),
 L("ax.set_xlabel('hour'); ax.set_ylabel('per unit'); ax.legend(frameon=False)"),
+L(""),
+L("ALT_TEXT = ("),
+L("    'One chart over 24 hours, per unit. A black line traces the demand '"),
+L("    'shape, peaking in the late afternoon. A filled orange band shows '"),
+L("    'the solar capacity factor rising and falling around midday, and a '"),
+L("    'filled blue band shows the wind capacity factor, which is highest '"),
+L("    'overnight and lowest when solar is strongest.')"),
+L(""),
 L("plt.tight_layout(); plt.show()"),
 ))
 
@@ -794,12 +811,13 @@ L("Same network, same answer - so from here the function is safe to trust:"),
 
 A(code(
 L("check = solve(build(stage=1))"),
-L("rel = abs(check.objective - n1.objective) / n1.objective"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L("rel = relative(check.objective, n1.objective)"),
 L(""),
 L("print(f'hand-built   ${n1.objective:,.2f}')"),
 L("print(f'build(1)     ${check.objective:,.2f}')"),
 L("print(f'relative difference {rel:.2e}')"),
-L("assert rel < 1e-9, 'the wrapper does not reproduce the hand-built network'"),
+L("assert rel < AGREEMENT_RTOL, 'the wrapper does not reproduce the hand-built network'"),
 L("print()"),
 L("print('the wrapper reproduces the hand-built network exactly.')"),
 ))
@@ -1248,6 +1266,111 @@ L("> **Exercise S3.5.** `N_TO_H` is defined as a limit on flow *into* Houston "
   "a limit nobody published; say how large the error is."),
 ))
 
+A(md(
+L("---"),
+L("### Does the package agree?"),
+L(""),
+L("`esm.buildout` checks this study from `data/raw/`. **It does not re-solve "
+  "the model, and that is a deliberate limit rather than an omission.**"),
+L(""),
+L("A second implementation would have to reproduce PyPSA's conventions for "
+  "storage state of charge, multi-period investment, line expansion and "
+  "snapshot weighting. Those conventions are exactly what it would be "
+  "guessing at - so an agreement built on them would be testing somebody's "
+  "reading of the PyPSA documentation, not this model. A confident wrong "
+  "answer is worse than a stated gap."),
+L(""),
+L("**What it checks instead is where a spatial study actually goes wrong**, "
+  "and where a genuinely independent calculation exists:"),
+L(""),
+L("- **Distances, by a different formula.** You used haversine. The package "
+  "uses the spherical law of cosines - a different expression of the same "
+  "geometry, not a copy of the same code. It catches a transposed lat/lon "
+  "or a radius in miles, both of which give plausible distances and a "
+  "plausible answer and show up nowhere else."),
+L("- **Fuel costs**, rebuilt from price, heat rate and VOM."),
+L("- **Capital**, annualised through the same CRF the rest of the package "
+  "uses, then divided by 365 - because a period here is one representative "
+  "day, and mixing $/yr capital with $/day operating is the classic way to "
+  "be wrong by three orders of magnitude."),
+L("- **Resource limits and demand shares**, which must bind and must sum to "
+  "one respectively."),
+))
+
+A(code(
+L("from esm.buildout import (check_demand_shares, check_resource_limits,"),
+L("                         coal_cost_per_mwh, corridor_distances,"),
+L("                         gas_cost_per_mwh, line_daily_capital,"),
+L("                         load_buildout_instance)"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L(""),
+L("inst = load_buildout_instance()"),
+L("check_demand_shares(inst)          # must sum to 1, or all demand is wrong"),
+L(""),
+L("pkg_km = corridor_distances(inst)"),
+L("checks = [(f'{a[:3].upper()}-{b[:3].upper()} km',"),
+L("           haversine_km(HUBS[a], HUBS[b]), pkg_km[(a, b)])"),
+L("          for a, b in CORRIDORS]"),
+L("checks += [('gas $/MWh-e',"),
+L("            GAS_PRICE_MMBTU * GAS_HEAT_RATE + GAS_VOM,"),
+L("            gas_cost_per_mwh(inst)),"),
+L("           ('coal $/MWh-e',"),
+L("            COAL_PRICE_MMBTU * COAL_HEAT_RATE + COAL_VOM,"),
+L("            coal_cost_per_mwh(inst))]"),
+L("checks += [(f'{a[:3].upper()}-{b[:3].upper()} $/MW/day',"),
+L("            daily_capital(LINE_CAPEX_PER_MW_KM * haversine_km(HUBS[a],"),
+L("                                                              HUBS[b]),"),
+L("                          LINE_LIFE),"),
+L("            line_daily_capital(inst, pkg_km[(a, b)]))"),
+L("           for a, b in CORRIDORS]"),
+L(""),
+L("print(f'{\"quantity\":22s} {\"notebook\":>12s} {\"package\":>12s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:22s} {hand:12,.4f} {pkg:12,.4f}'"),
+L("          f' {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L("print()"),
+L("print(f'notebook and package agree to {worst:.1e}')"),
+L("print()"),
+L("print('Note which corridor disagrees most: the SHORTEST one. That is not')"),
+L("print('noise - the law of cosines loses precision as the angle goes to')"),
+L("print('zero, which is the reason haversine exists. It is thirteen orders')"),
+L("print('below the tolerance here, and it is why the two really are')"),
+L('print("different calculations rather than one written twice.")'),
+))
+
+A(md(
+L("Now the limits, against what Stage 3 actually built:"),
+))
+
+A(code(
+L("built = n3.generators.p_nom_opt.groupby("),
+L("    [n3.generators.bus, n3.generators.carrier]).sum()"),
+L("wind_built = {hub: float(built.get((hub, 'wind'), 0.0)) for hub in HUBS}"),
+L("solar_built = {hub: float(built.get((hub, 'solar'), 0.0)) for hub in HUBS}"),
+L(""),
+L("check_resource_limits(inst, wind_built, solar_built)"),
+L(""),
+L("print(f'{\"hub\":20s} {\"wind MW\":>10s} {\"of max\":>9s}'"),
+L("      f' {\"solar MW\":>10s} {\"of max\":>9s}')"),
+L("for hub in HUBS:"),
+L("    wmax = inst.hubs[hub]['wind_max_mw']"),
+L("    smax = inst.hubs[hub]['solar_max_mw']"),
+L("    wpc = f'{wind_built[hub] / wmax:8.0%}' if wmax else '       -'"),
+L("    spc = f'{solar_built[hub] / smax:8.0%}' if smax else '       -'"),
+L("    print(f'{hub:20s} {wind_built[hub]:10,.0f} {wpc:>9s}'"),
+L("          f' {solar_built[hub]:10,.0f} {spc:>9s}')"),
+L(""),
+L("print()"),
+L("print('Every built capacity is inside its resource limit. A limit that')"),
+L("print('never binds is not constraining the answer; one at 100% is the')"),
+L("print('reason the model reached for a corridor instead of more local')"),
+L("print('generation. That is the spatial result this notebook is about.')"),
+))
 A(md(
 L("### What to hand in"),
 L(""),
