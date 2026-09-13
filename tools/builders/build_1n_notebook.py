@@ -658,13 +658,82 @@ L("end_uses = pd.DataFrame({"),
 L("    \"heating\": heating_kwh, \"cooling\": cooling_kwh,"),
 L("    \"water_heating\": water_heating_kwh, \"other_baseline\": other_baseline_kwh,"),
 L("})"),
-L("assert np.allclose(end_uses.sum(axis=1), daily_kwh, atol=1e-6), \\"),
+L("from esm.tolerance import CONSERVATION_ATOL"),
+L("assert np.allclose(end_uses.sum(axis=1), daily_kwh,"),
+L("                   atol=CONSERVATION_ATOL), \\"),
 L("    \"end uses must reconcile back to the metered total\""),
 L(""),
 L("print(\"Annual share of each end use:\")"),
 L("print((end_uses.sum() / end_uses.sum().sum() * 100).round(1).astype(str) + \"%\")"),
 L("end_uses.plot.area(figsize=(10, 3), title=\"Disaggregated daily load (kWh)\")"),
 L("plt.tight_layout(); plt.show()"),
+))
+
+A(md(
+L("---"),
+L("### Does the package agree?"),
+L(""),
+L("Part 2 above said it used **the same method Mini-Project 1 used**. It now "
+  "literally does: `esm.repdays.fit_degree_day_model` is the function behind "
+  "`05_representative_days`, and this cell runs your own HDD and CDD through "
+  "it."),
+L(""),
+L("Two things make that worth doing rather than decorative:"),
+L(""),
+L("- **A different algorithm.** You fit with NumPy's `lstsq`, which calls "
+  "LAPACK's `gelsd` (SVD-based). The package uses SciPy's with `gelsy`, a "
+  "complete orthogonal factorisation. Same answer, different route."),
+L("- **A different column order.** You built the design matrix as "
+  "`[1, HDD, CDD]`; the package builds `[1, CDD, HDD]`. If either of you had "
+  "mixed up which slope is which, the coefficients would land swapped and "
+  "this comparison would catch it. Agreement here says the two fits describe "
+  "the same model, not merely that they ran the same code."),
+L(""),
+L("It also checks the fit against **the normal equations** directly. Any "
+  "least-squares solution must satisfy `X'X b = X'y`, whatever found it - so "
+  "that catches a fit both routines agree on and that is still not the "
+  "least-squares answer, which comparing them cannot do."),
+))
+
+A(code(
+L("from esm.repdays import (fit_degree_day_model, normal_equation_residual,"),
+L("                        r_squared_two_ways)"),
+L("from esm.tolerance import AGREEMENT_RTOL, CONSERVATION_ATOL, relative"),
+L(""),
+L("# NOTE the argument order: the package takes (values, cdd, hdd) and returns"),
+L("# named fields, so a swapped slope cannot hide behind a positional index."),
+L("pkg_fit = fit_degree_day_model(daily_kwh.values, cdd.values, hdd.values)"),
+L(""),
+L("checks = [('baseline kWh/day', baseline_kwh_per_day, pkg_fit.intercept),"),
+L("          ('per heating degree', heat_slope, pkg_fit.per_heating_degree),"),
+L("          ('per cooling degree', cool_slope, pkg_fit.per_cooling_degree),"),
+L("          ('R-squared', r2, pkg_fit.r_squared)]"),
+L(""),
+L("print(f'{\"quantity\":22s} {\"notebook\":>14s} {\"package\":>14s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:22s} {hand:14,.6f} {pkg:14,.6f}'"),
+L("          f' {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L("print()"),
+L("print(f'two LAPACK drivers, two column orders, agree to {worst:.1e}')"),
+L(""),
+L("res = normal_equation_residual(daily_kwh.values, cdd.values, hdd.values,"),
+L("                               pkg_fit)"),
+L("a, b = r_squared_two_ways(daily_kwh.values, cdd.values, hdd.values, pkg_fit)"),
+L("print(f'normal-equation residual  {res:.1e}')"),
+L("print(f'R-squared, two ways       {a:.9f} vs {b:.9f}')"),
+L(""),
+L("# and the reconciliation, against the named conservation tolerance rather"),
+L("# than a literal -- this is a quantity that ought to be EXACT, because the"),
+L("# end uses are built by subtraction from the metered total."),
+L("residual = float((end_uses.sum(axis=1) - daily_kwh).abs().max())"),
+L("assert residual < CONSERVATION_ATOL, ("),
+L("    f'end uses miss the metered total by {residual:.2e} kWh')"),
+L("print(f'end-use reconciliation    {residual:.1e} kWh (exact)')"),
 ))
 
 A(md(
