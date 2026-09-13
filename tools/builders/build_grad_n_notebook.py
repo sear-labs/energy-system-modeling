@@ -1042,6 +1042,96 @@ L("> **Exercise 6.2.** Compare the installed capacity mix above against "
 ))
 
 A(md(
+L("---"),
+L("### Does the package agree?"),
+L(""),
+L("There is nothing here to re-solve, so `esm.network_import` does not try. "
+  "It re-runs the three **checks** independently instead - which is the right "
+  "shape for a notebook whose subject is data that arrives broken without "
+  "raising."),
+L(""),
+L("The coordinate one is worth watching. The package never reads a column "
+  "header. For each coordinate column it computes the error against all four "
+  "possible meanings, taken from the bus table, and reports the best fit. "
+  "**A header is a claim; the bus table is evidence.**"),
+L(""),
+L("Because you already renamed the columns in Part 1, an independent "
+  "inference should now find every one of them correctly labelled - so this "
+  "checks your *fix*, not just your diagnosis. Then it puts the swap back to "
+  "confirm the check can actually fail, because a check that cannot fail "
+  "tells you nothing when it passes."),
+))
+
+A(code(
+L("from esm.network_import import (check_matpower_parse, check_profile_orientation,"),
+L("                               coordinate_inference_is_decisive,"),
+L("                               generation_mix, infer_coordinate_columns,"),
+L("                               mislabelled_columns, parse_matpower)"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L(""),
+L("# 1. the orientation defect"),
+L("check_profile_orientation(load, solar, wind, len(bus),"),
+L("                          len(solar_map), len(wind_map))"),
+L("print('profile orientation: as documented')"),
+L(""),
+L("# 2. the coordinate defect -- against YOUR corrected columns"),
+L("fixed_claim = {'from_lat': 'from_lat', 'to_lat': 'to_lat',"),
+L("               'from_lon': 'from_lon', 'to_lon': 'to_lon'}"),
+L("inf = infer_coordinate_columns(line, bus,"),
+L("                               candidate_columns=list(fixed_claim))"),
+L("assert mislabelled_columns(inf, fixed_claim) == {}, 'the rename is wrong'"),
+L("assert coordinate_inference_is_decisive(inf), 'the inference is a coin toss'"),
+L("print('coordinate columns: your rename verified independently')"),
+L("for col, (best, e1, e2) in inf.items():"),
+L("    print(f'  {col:9s} -> {best:9s}  error {e1:8.5f}  '"),
+L("          f'next-best {e2:8.3f} deg')"),
+L(""),
+L("# and prove the check can fail: put the original swap back"),
+L("swapped = line.rename(columns={'to_lat': 'from_lon', 'from_lon': 'to_lat'})"),
+L("caught = mislabelled_columns("),
+L("    infer_coordinate_columns(swapped, bus,"),
+L("                             candidate_columns=list(fixed_claim)),"),
+L("    fixed_claim)"),
+L("assert caught, 'the detector did not fire on a known-bad table'"),
+L("print(f'  re-swapped as a control: {len(caught)} column(s) flagged')"),
+))
+
+A(md(
+L("And the MATPOWER parse, against an independent implementation:"),
+))
+
+A(code(
+L("pkg_ppc = parse_matpower(text)"),
+L("check_matpower_parse(pkg_ppc, n_buses=len(ppc['bus']),"),
+L("                     n_gens=len(ppc['gen']),"),
+L("                     n_branches=len(ppc['branch']))"),
+L(""),
+L("checks = [('baseMVA', ppc['baseMVA'], pkg_ppc['baseMVA'])]"),
+L("checks += [(f'{f} rows', float(len(ppc[f])), float(len(pkg_ppc[f])))"),
+L("           for f in ('bus', 'gen', 'branch', 'gencost')]"),
+L("checks += [(f'{f} labels', float(len(ppc[f])), float(len(pkg_ppc[f])))"),
+L("           for f in ('gentype', 'genfuel', 'bus_name')]"),
+L("pkg_mix = generation_mix(pkg_ppc)"),
+L("checks += [(f'{fuel} MW', float(v), pkg_mix[fuel])"),
+L("           for fuel, v in list(pkg_mix.items())[:4]]"),
+L(""),
+L("print(f'{\"quantity\":16s} {\"notebook\":>12s} {\"package\":>12s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:16s} {hand:12,.1f} {pkg:12,.1f}'"),
+L("          f' {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L("print()"),
+L("print(f'two parsers agree to {worst:.1e}, cell arrays included')"),
+L("print()"),
+L("print('The cell arrays are the whole point. Both standard converters drop')"),
+L("print('them, and they are the only record of what each machine burns -')"),
+L("print('without them this is 544 anonymous generators and no fuel mix.')"),
+))
+A(md(
 L("### What to hand in for Stage 2"),
 L(""),
 L("State **what changes going from 123 buses to 2,000 beyond \"more nodes\"**. "
