@@ -101,8 +101,6 @@ A(code(
 L("import numpy as np"),
 L("import pandas as pd"),
 L("import matplotlib.pyplot as plt"),
-L("import warnings"),
-L("warnings.filterwarnings('ignore')"),
 ))
 
 A(md(
@@ -119,8 +117,28 @@ L("**If that file is not next to the notebook** - which it will not be the "
   "up."),
 ))
 
+A(md(
+L("> **Predict before you run it.** Write down, now, what you expect your own "
+  "year to look like: which month carries your highest day, roughly what "
+  "fraction of your annual total the summer months take, and whether your "
+  "peak hour is in the morning or the evening. Three guesses, ten seconds. "
+  "You will check them against the real export in a moment, and the ones you "
+  "get wrong are the ones worth understanding."),
+))
+
 A(code(
 L("DEMAND_CSV_PATH = 'IntervalData.csv'   # <-- your own export"),
+L(""),
+L("# Named and printed, not buried in the call: the stand-in must be the"),
+L("# SAME year every run. PCG64 is stream-stable across NumPy versions."),
+L("STAND_IN_SEED = 0"),
+))
+
+A(md(
+L("Now the loader itself. It tries your file first and falls back loudly."),
+))
+
+A(code(
 L(""),
 L(""),
 L("def load_interval(path):"),
@@ -139,7 +157,7 @@ L("    hour, doy = idx.hour.to_numpy(), idx.dayofyear.to_numpy()"),
 L("    shape = (0.9 + 0.45 * np.exp(-((hour - 19) ** 2) / 6.0)"),
 L("             + 0.20 * np.exp(-((hour - 7) ** 2) / 4.0))"),
 L("    cooling = 1 + 0.55 * np.clip(np.sin(np.pi * (doy - 100) / 240), 0, 1)"),
-L("    rng = np.random.default_rng(0)"),
+L("    rng = np.random.default_rng(STAND_IN_SEED)"),
 L("    kw = 1.4 * shape * cooling * rng.normal(1.0, 0.05, len(idx))"),
 L("    return pd.Series(np.clip(kw, 0.15, None), index=idx)"),
 L(""),
@@ -155,9 +173,11 @@ L("    print('=' * 66)"),
 L("    print(f'NO FILE NAMED {DEMAND_CSV_PATH} - using a SYNTHETIC year.')"),
 L("    print('The notebook will run, but this is not your data and it is')"),
 L("    print('not an acceptable submission. Upload your export and re-run.')"),
+L("    print(f'stand-in seed {STAND_IN_SEED} - reproducible, but not yours.')"),
 L("    print('=' * 66)"),
 L(""),
-L("print(f'{demand_kw.index[0]:%Y-%m-%d} to {demand_kw.index[-1]:%Y-%m-%d}')"),
+L("print(f'{len(demand_kw):,} hourly points'"),
+L("      f'  ({demand_kw.index[0]:%Y-%m-%d} to {demand_kw.index[-1]:%Y-%m-%d})')"),
 L("print(f'peak {demand_kw.max():.2f} kW   mean {demand_kw.mean():.2f} kW')"),
 ))
 
@@ -177,6 +197,14 @@ L("fig, ax = plt.subplots(2, 1, figsize=(10, 5))"),
 L("daily_kwh.plot(ax=ax[0], title='daily energy across the year (kWh)')"),
 L("demand_kw.iloc[24 * 180:24 * 187].plot("),
 L("    ax=ax[1], title='one week in late June (kW)')"),
+L(""),
+L("ALT_TEXT = ("),
+L("    'Two stacked line charts. The upper panel shows daily electricity use '"),
+L("    'across a full year, rising through the summer cooling season and '"),
+L("    'falling either side of it. The lower panel shows hourly demand across '"),
+L("    'one week in late June, with a pronounced evening peak each day and a '"),
+L("    'smaller morning rise.')"),
+L(""),
 L("plt.tight_layout(); plt.show()"),
 L(""),
 L("print(f'annual total {daily_kwh.sum():,.0f} kWh')"),
@@ -324,6 +352,95 @@ L("summer = top4.index.month.isin([6, 7, 8, 9]).sum()"),
 L("print(f'{summer} of your 4 peak hours fall in June-September,')"),
 L("print('which is when ERCOT sets 4CP. Would yours have coincided with the')"),
 L("print('system peak, or only with your own?')"),
+))
+
+A(md(
+L("---"),
+L("### Does the package agree?"),
+L(""),
+L("Every other notebook in this course checks itself against a package that "
+  "solves a **fixed** instance. This one cannot: the instance is *your* "
+  "export, and nobody else has it."),
+L(""),
+L("**So what is shared here is the method, not the data.** `esm.repdays` runs "
+  "the same three steps - daily totals, representative-day picks, the "
+  "degree-day fit - on whatever series you ended up with, and the check is "
+  "worth exactly as much on your meter data as on the stand-in. That is the "
+  "property a bring-your-own-data notebook needs, and a fixed instance could "
+  "not have given it."),
+L(""),
+L("Three things below are worth more than the agreement itself:"),
+L(""),
+L("- **The regression goes through a different algorithm.** The fit above uses "
+  "NumPy's `lstsq` (LAPACK `gelsd`, SVD-based); the package uses SciPy's with "
+  "`gelsy`, a complete orthogonal factorisation. Different route, same answer."),
+L(""),
+L("- **The normal equations are checked directly.** Any least-squares "
+  "solution must satisfy them, whatever found it - so this catches a fit that "
+  "*both* routines agree on and that is still wrong."),
+L(""),
+L("- **R-squared is computed twice.** `1 - SS_res/SS_tot` and the squared "
+  "correlation of fitted against observed are equal for least squares **with "
+  "an intercept** and unequal otherwise. Comparing them tests the model, not "
+  "the arithmetic."),
+))
+
+A(code(
+L("import numpy as np"),
+L("from esm.repdays import (compression_error, daily_totals, ties_in_daily_totals,"),
+L("                        fit_degree_day_model, normal_equation_residual,"),
+L("                        pick_representative_days, r_squared_two_ways,"),
+L("                        synthetic_year, weighted_annual_estimate)"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L(""),
+L("if not IS_REAL:"),
+L("    # the package carries a second copy of the stand-in construction;"),
+L("    # compare the copies rather than trust them"),
+L("    assert np.allclose(synthetic_year(STAND_IN_SEED).values,"),
+L("                       demand_kw.values, rtol=1e-12)"),
+L("    print(f'stand-in year: both copies agree (seed {STAND_IN_SEED})')"),
+L(""),
+L("pkg_daily = daily_totals(demand_kw)"),
+L("# Part 6: tied daily totals leave the sort order, and so WHICH date is"),
+L("# picked, undetermined -- the total it stands for is still fine."),
+L("assert ties_in_daily_totals(pkg_daily) == [], 'tied daily totals'"),
+L("pkg_picks, pkg_weights = pick_representative_days(pkg_daily, 3)"),
+L("pkg_fit = fit_degree_day_model(pkg_daily.values, cdd, hdd)"),
+L(""),
+L("assert list(pkg_picks) == list(picks), 'different representative days'"),
+L("assert pkg_weights == weights, 'different weights'"),
+L(""),
+L("checks = [('annual total', actual, float(pkg_daily.sum())),"),
+L("          ('weighted estimate', estimate,"),
+L("           weighted_annual_estimate(pkg_daily, pkg_picks, pkg_weights)),"),
+L("          ('compression error', error,"),
+L("           compression_error(pkg_daily, pkg_picks, pkg_weights)),"),
+L("          ('baseline kWh/day', beta[0], pkg_fit.intercept),"),
+L("          ('per cooling degree', beta[1], pkg_fit.per_cooling_degree),"),
+L("          ('per heating degree', beta[2], pkg_fit.per_heating_degree),"),
+L("          ('R-squared', 1 - ss_res / ss_tot, pkg_fit.r_squared)]"),
+L(""),
+))
+
+A(md(
+L("Same days, same weights. Now the numbers:"),
+))
+
+A(code(
+L("print(f'{\"quantity\":22s} {\"notebook\":>14s} {\"package\":>14s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:22s} {hand:14,.4f} {pkg:14,.4f} {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L("print()"),
+L("print(f'same days, same weights, and every number agrees to {worst:.1e}')"),
+L(""),
+L("r2_a, r2_b = r_squared_two_ways(pkg_daily.values, cdd, hdd, pkg_fit)"),
+L("print(f'normal-equation residual  {normal_equation_residual(pkg_daily.values, cdd, hdd, pkg_fit):.1e}')"),
+L("print(f'R-squared, two ways       {r2_a:.9f} vs {r2_b:.9f}')"),
 ))
 
 A(md(
