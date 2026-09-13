@@ -128,6 +128,14 @@ A(code(
 L("!pip install -q pypsa highspy pulp gurobipy"),
 ))
 
+A(md(
+L("### The system, as constants"),
+L(""),
+L("Five hubs, seven corridors, three technologies and one representative "
+  "day. Every number below is an input to BOTH models - that is the point "
+  "of writing them here rather than inside either one."),
+))
+
 A(code(
 L("import numpy as np"),
 L("import pandas as pd"),
@@ -167,7 +175,11 @@ L("def daily_capital(capex, life, wacc):"),
 L("    return capex * crf(wacc, life) / 365.0"),
 L(""),
 L(""),
-L("def profiles(seed=42):"),
+L("PROFILE_SEED = 42   # the wind trace is stochastic; a run nobody can"),
+L("                    # reproduce is a run nobody can check."),
+L(""),
+L(""),
+L("def profiles(seed=PROFILE_SEED):"),
 L("    h = np.arange(HOURS)"),
 L("    shape = np.clip(0.60 + 0.40 * np.sin(np.pi * (h - 6) / 12)"),
 L("                    * ((h >= 6) & (h <= 22)), 0.4, 1.0)"),
@@ -284,6 +296,7 @@ L("                arcs=arcs)"),
 L(""),
 L(""),
 L("tables = export_tables()"),
+L("print(f'wind trace drawn with seed {PROFILE_SEED}')"),
 L("print('tech:'); print(tables['tech'].round(2).to_string())"),
 L("print('\\nbuildable MW by node and technology:')"),
 L("print(tables['limit'].astype(int).to_string())"),
@@ -517,7 +530,11 @@ L("gap = obj_pulp - obj_tr"),
 L("print(f'observed gap                            ${gap:>14,.2f}')"),
 L("print(f'daily capital on 3,000 MW x 7 corridors ${sunk:>14,.2f}')"),
 L("print(f'residual                                ${gap - sunk:>14,.2f}')"),
-L("assert abs(gap - sunk) < 1.0, 'the gap is NOT just the sunk-cost convention'"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L("# a relative tolerance, not a dollar: $1 on a $23M objective is 4e-8,"),
+L("# which would accept a discrepancy far larger than the one being tested."),
+L("assert relative(gap, sunk) < AGREEMENT_RTOL, ("),
+L("    'the gap is NOT just the sunk-cost convention')"),
 L(""),
 L("# Align the convention and re-solve."),
 L("m2, cap2, acap2 = pulp_model(tables, charge_existing=False)"),
@@ -626,6 +643,96 @@ L("That ordering is the result of this assignment, and it is not what most "
 ))
 
 # ============================================================== full weight
+A(md(
+L("---"),
+L("### A third reader of the same bundle"),
+L(""),
+L("Two implementations agreeing rules out a transcription slip. It does not "
+  "rule out a **shared misreading of the formulation** - and you wrote both "
+  "of these, from the same page, in the same sitting."),
+L(""),
+L("`esm.diversity` reads the same `tables` dict you handed to PyPSA and to "
+  "PuLP - not a copy of the numbers, the same object - and solves it through "
+  "`scipy.optimize.linprog`, written from the LP algebra directly with signed "
+  "flows and explicit balance rows. It has no notion of a network at all, "
+  "which is the point: it shows the transport answer is a property of the "
+  "algebra rather than of PyPSA."),
+L(""),
+L("**And it settles a question Part 3 left open.** You compared builds "
+  "between the two tools and they matched. Does that mean the build is "
+  "determined? Run the cell and find out - the answer is not the one the "
+  "matching table suggests."),
+))
+
+A(code(
+L("from esm.diversity import (assert_comparable_quantities_are_unique,"),
+L("                          build_by_tech, per_hub_ranges,"),
+L("                          solve_expansion, sunk_cost)"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L(""),
+L("scipy_charged = solve_expansion(tables, charge_existing=True)"),
+L("scipy_free = solve_expansion(tables, charge_existing=False)"),
+L("scipy_build = build_by_tech(scipy_charged)"),
+L(""),
+L("checks = [('PuLP objective', obj_pulp, scipy_charged.cost),"),
+L("          ('PyPSA transport', obj_tr, scipy_free.cost),"),
+L("          ('sunk-cost gap', obj_pulp - obj_tr, sunk_cost(tables))]"),
+L("checks += [(f'{g} MW built', float(pypsa_build[g]), scipy_build[g])"),
+L("           for g in tables['tech'].index]"),
+L(""),
+L("print(f'{\"quantity\":20s} {\"notebook\":>16s} {\"scipy\":>16s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:20s} {hand:16,.2f} {pkg:16,.2f}'"),
+L("          f' {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'three tools disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L("print()"),
+L("print(f'three independent tools agree to {worst:.1e}')"),
+))
+
+A(md(
+L("### Now the part the matching table did not tell you"),
+))
+
+A(code(
+L("# Fix total cost at its optimum, then ask how far each quantity can move"),
+L("# without changing it. Anything with room is NOT determined by the model."),
+L("assert_comparable_quantities_are_unique(tables)"),
+L("print('technology totals and corridor capacities: determined')"),
+L("print()"),
+L(""),
+L("loose = {k: v for k, v in per_hub_ranges(tables).items() if v[1] - v[0] > 1.0}"),
+L("print(f'per-hub capacities that are NOT determined: {len(loose)}')"),
+L("for (hub, tech), (lo, hi) in sorted(loose.items()):"),
+L("    print(f'  {hub:20s} {tech:6s} anywhere in [{lo:9,.0f} , {hi:9,.0f}] MW')"),
+))
+
+A(md(
+L("**Read that carefully, because it changes what Part 3 proved.**"),
+L(""),
+L("The *technology totals* and the *corridor capacities* are pinned to about "
+  "1e-10 MW - those are genuine results, and comparing them across tools is "
+  "legitimate."),
+L(""),
+L("**Where the solar goes is not pinned at all.** Solar costs the same "
+  "annualised amount wherever it is built and the corridors can move its "
+  "output, so the model is indifferent between several hubs. Two solvers can "
+  "return completely different per-hub builds and both be exactly optimal."),
+L(""),
+L("Your Part 3 table compared totals by carrier, which is the right choice - "
+  "but until now it was an unexamined one. Had you grouped it by hub instead, "
+  "PyPSA and PuLP would have 'disagreed', you would have gone looking for a "
+  "bug in one of them, and there would have been none to find."),
+L(""),
+L("> **This is Part 6 of the standard in one screen.** When several answers "
+  "tie, compare what every optimum shares and teach the tie. The hard part is "
+  "never the comparison - it is knowing which quantities are allowed to be "
+  "compared, and that is a question you have to ask the model rather than "
+  "assume of it."),
+))
 A(md(
 L("---"),
 L("## Part 6 — The full-weight route: PowerGenome → GenX"),
