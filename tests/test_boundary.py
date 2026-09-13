@@ -49,11 +49,39 @@ def test_the_instance_is_the_one_the_notebook_describes(inst):
 
 
 def test_the_profile_table_round_trips_exactly(inst):
-    """The tables are written with repr() and read with round_trip precision.
+    """Written with repr(), read with float_precision="round_trip".
 
-    Demand here comes from exponentials, so the values are not short decimals.
-    pandas' default float parser is fast rather than correctly rounded; if this
-    regresses, the instance quietly depends on the reader's pandas version.
+    Asserted as a property of the FILE and the PARSER -- not by recomputing the
+    notebook's formulas. An earlier version of this test did recompute them and
+    demanded bit-equality, which passed on the authoring machine and failed on
+    CI at one index: np.sin may differ by an ulp between platforms, so that
+    version was testing the runner's maths library rather than these tables.
+    Demand comes from exponentials here, so the values are not short decimals
+    and pandas' default parser (fast, not correctly rounded) does lose a bit.
+    """
+    import csv
+    with open(ROOT / "data" / "raw" / "boundary_profile.csv",
+              newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    assert len(rows) == 24
+    for row, metro, wind in zip(rows, inst.metro, inst.wind_pu):
+        # the loader agrees with Python's own correctly-rounded parser
+        assert float(row["metro_mw"]) == metro
+        assert float(row["wind_pu"]) == wind
+        # and the file carries enough digits to name the float uniquely
+        assert repr(metro) == row["metro_mw"]
+        assert repr(wind) == row["wind_pu"]
+
+
+def test_the_profile_matches_the_notebooks_closed_form(inst):
+    """The tables and the notebook are two copies of one instance.
+
+    Compared with a tolerance rather than bit-exactly, deliberately: the
+    notebook evaluates exp() and sin() on whichever machine runs it, and those
+    are not required to agree to the last bit across platforms. The slack here
+    is still a thousand times tighter than AGREEMENT_RTOL, and the marginal
+    unit in every hour sits ~1 MW from its nearest bound -- about 1e12 ulps --
+    so a difference at this scale cannot change a price or a dispatch.
     """
     import numpy as np
     hours = np.arange(24)
@@ -61,8 +89,26 @@ def test_the_profile_table_round_trips_exactly(inst):
              + 1000 * np.exp(-((hours - 19) ** 2) / 12.0)
              + 400 * np.exp(-((hours - 8) ** 2) / 6.0))
     wind = np.clip(0.30 + 0.55 * np.sin(np.pi * (hours - 2) / 16), 0, 1)
-    assert inst.metro == [float(v) for v in metro]
-    assert inst.wind_pu == [float(v) for v in wind]
+    assert np.allclose(inst.metro, metro, rtol=1e-12, atol=0.0)
+    assert np.allclose(inst.wind_pu, wind, rtol=1e-12, atol=1e-15)
+
+
+def test_no_marginal_unit_sits_near_a_bound(inst):
+    """What makes the tolerance above safe, asserted rather than asserted-about.
+
+    A merit-order price is a step function of demand. If a marginal unit sat a
+    hair from full or empty, a last-bit difference in demand could tip it and
+    move the price by a whole step. Measure the clearance instead of trusting
+    that it is large.
+    """
+    for mw in (0.0, 50.0, 500.0, 600.0):
+        r = solve_dispatch(inst, mw)
+        for h in inst.hours:
+            for g, spec in inst.generators.items():
+                cap = spec["p_nom"] * (inst.wind_pu[h] if spec["profile"] else 1.0)
+                p = r.dispatch[g][h]
+                if 1e-6 < p < cap - 1e-6:
+                    assert min(p, cap - p) > 0.1, (mw, h, g, p, cap)
 
 
 def test_demand_is_met_exactly_every_hour(inst, base):

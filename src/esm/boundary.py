@@ -45,15 +45,32 @@ explanation instead of failing as a mismatch.
 Total cost is unique whether or not prices are, and dispatch is unique here
 because every marginal cost in the stack is distinct.
 
-FLOAT PRECISION IN THE TABLES IS LOAD-BEARING
+FLOAT PRECISION, AND EXACTLY HOW FAR IT GOES
 
 `boundary_profile.csv` holds demand computed from exponentials, so its values
-are not short decimals. pandas' default CSV float parser is fast rather than
-correctly rounded and loses about one unit in the last place; `repr()` on the
-way out plus `float_precision="round_trip"` on the way back in is exact. The
-error it removes is ~2e-16 relative and would not by itself have broken a 1e-9
-assertion -- it is fixed because a table that does not round-trip is a table
-whose contents depend on the reader's pandas version.
+are not short decimals like every other instance in this repository. Two things
+follow, and only the first is fixable.
+
+**The file round-trips exactly.** pandas' default CSV float parser is fast
+rather than correctly rounded and loses about a bit; `repr()` on the way out
+plus `float_precision="round_trip"` on the way back in is exact. Worth doing
+because a table that does not round-trip is a table whose contents depend on
+the reader's pandas version -- though the ~2e-16 it removes would not on its
+own have broken a 1e-9 assertion.
+
+**The notebook's formulas do NOT reproduce bit-for-bit across machines, and
+cannot be made to.** `exp()` and `sin()` are not required to be identical
+between platforms, and are not: the first version of this module's test
+recomputed the closed forms and demanded bit-equality, passed on the authoring
+machine, and failed on CI at one index of `wind_pu`. Comparing a stored table
+against a freshly evaluated transcendental tests the runner's maths library.
+
+That is harmless HERE, and the reason is measured rather than assumed: a
+merit-order price is a step function of demand, so a last-bit difference could
+in principle tip a marginal unit and move a price by a whole step -- but the
+marginal unit in every hour sits about 1 MW from its nearest bound, some 1e12
+ulps away. `test_no_marginal_unit_sits_near_a_bound` asserts that clearance, so
+the argument stops being an argument.
 """
 from __future__ import annotations
 
