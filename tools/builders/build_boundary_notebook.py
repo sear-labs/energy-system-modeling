@@ -518,6 +518,69 @@ L("    print('solved - check the interconnection p_nom')"),
 # ================================================================== part F
 A(md(
 L("---"),
+L("### Does the package agree?"),
+L(""),
+L("Everything above was built in PyPSA, as one linear program over all "
+  "twenty-four snapshots. `esm.boundary` solves the same instance through "
+  "`scipy.optimize.linprog` - and solves it **hour by hour, as twenty-four "
+  "separate problems**."),
+L(""),
+L("**That is not a shortcut, and the reason matters more than the check.** "
+  "This model has no storage, no ramp limits and no commitment, so nothing "
+  "couples one hour to the next and the day separates exactly into "
+  "twenty-four independent hours. Two formulations that look nothing alike "
+  "must give the same answer. Add a battery and the separation fails - which "
+  "is the single most useful thing to know about this model before the next "
+  "notebook adds one."),
+L(""),
+L("**What may be compared, and why it is checked.** A merit-order price is "
+  "set by whichever unit is partly loaded. If demand ever landed exactly on a "
+  "capacity boundary, every unit would be full or empty, no unit would be "
+  "marginal, and any price between the two neighbouring costs would be "
+  "equally optimal - two solvers would then disagree while both were right. "
+  "No hour here is like that, but that is a property of this demand curve "
+  "rather than of the model, so `assert_prices_are_unique` re-derives it "
+  "before any price is compared."),
+))
+
+A(code(
+L("from esm.boundary import (assert_prices_are_unique, bill,"),
+L("                         load_boundary_instance, solve_dispatch)"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L(""),
+L("inst = load_boundary_instance()"),
+L("pkg_base = solve_dispatch(inst, 0)"),
+L("assert_prices_are_unique(inst, pkg_base)   # Part 6, before comparing"),
+L("pkg_park = solve_dispatch(inst, 50)"),
+L("pkg_dc = solve_dispatch(inst, 500)"),
+L(""),
+L("checks = [('system cost, no site', n_base.objective, pkg_base.cost),"),
+L("          ('system cost, park', n_park.objective, pkg_park.cost),"),
+L("          ('system cost, data centre', n_dc.objective, pkg_dc.cost),"),
+L("          ('park bill', park_actual, bill(pkg_park, 50.0)),"),
+L("          ('data centre bill', dc_actual, bill(pkg_dc, 500.0))]"),
+L("prices = [(float(lmp_base.iloc[h]), pkg_base.lmp[h]) for h in range(24)]"),
+L(""),
+L("print(f'{\"quantity\":26s} {\"PyPSA, 24h at once\":>19s}'"),
+L("      f' {\"package, hour by hour\":>22s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:26s} {hand:19,.1f} {pkg:22,.1f}'"),
+L("          f' {relative(hand, pkg):10.1e}')"),
+L("worst_price = max(relative(a, b) for a, b in prices)"),
+L("print(f'{\"all 24 hourly prices\":26s} {\"\":>19s} {\"\":>22s}'"),
+L("      f' {worst_price:10.1e}')"),
+L(""),
+L("worst = max([relative(a, b) for _, a, b in checks] + [worst_price])"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L(""),
+L("print()"),
+L("print(f'notebook and package agree to {worst:.1e}')"),
+))
+
+A(md(
+L("---"),
 L("# Part F - What actually crosses the boundary"),
 L(""),
 L("Lowering the boundary is **not** \"ignore the grid\". It is \"import the "

@@ -1,0 +1,13 @@
+generator,p_nom_mw,marginal_cost,profile
+wind,5000.0,0.0,wind_pu
+gas01,600.0,22.0,
+gas02,600.0,26.0,
+gas03,600.0,31.0,
+gas04,600.0,37.0,
+gas05,600.0,44.0,
+gas06,600.0,52.0,
+gas07,600.0,62.0,
+gas08,600.0,90.0,
+peaker1,300.0,175.0,
+peaker2,300.0,600.0,
+scarcity,300.0,2000.0,
