@@ -26,7 +26,7 @@ each file here keeps the licence it arrived with.
 | PyPSA technology-data costs | **GPL-3.0** | keep its notice beside it, do not relicense |
 | `case_ACTIVSg2000.m` | **not MATPOWER's BSD** — Texas A&M free-use grant | **vendored 2026-09-13 on Jones's ruling**; see its sidecar |
 | Open-Meteo archive | CC BY 4.0 under their terms | an API; cache a snapshot |
-| TU Berlin cloud time series | **none stated** | **replace, do not vendor** |
+| ~~TU Berlin cloud time series~~ | none stated | **REMOVED 2026-09-13** — 06 now reads TX-123BT |
 
 Three of these need saying plainly:
 
@@ -35,9 +35,15 @@ MIT repository. Vendoring them means keeping their notice beside them and not
 relicensing them — which `LICENSE-DATA` already provides for by giving this
 directory its own terms.
 
-**The TU Berlin series has no licence and is behind a personal share link.** No
-stated licence is not permission, and a personal share link is not a source. It
-gets replaced with something citable rather than vendored.
+**The TU Berlin series is gone, replaced 2026-09-13.** It had no licence and sat
+behind a personal share link; no stated licence is not permission, and a
+personal share link is not a source.
+
+It was also, on inspection, hourly wind/solar/load for **Germany in 2015** — the
+wrong continent for a course built on ERCOT. `06_end_use_disaggregation` now
+reads `tx123bt_profiles_2021.csv`, derived from TX-123BT (CC BY 4.0) by
+`tools/build_tx123bt_profiles.py`. One licence problem and one coherence problem
+closed by the same change.
 
 **TX-123BT is licensed to vendor and is still not vendored, on purpose.** It is
 CC BY 4.0, so there is no licence obstacle at all. The obstacle is size and
