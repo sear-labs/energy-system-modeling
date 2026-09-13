@@ -430,6 +430,8 @@ L("The conservation constraint you wrote by hand at each refinery is what "
 ))
 
 A(code(
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L(""),
 L("n = pypsa.Network()"),
 L("n.set_snapshots([0])"),
 L(""),
@@ -453,15 +455,14 @@ L("for (p, j), c in deliver.items():"),
 L("    n.add('Link', f'{p}->{j}', bus0=f'{p} refinery', bus1=j,"),
 L("          p_nom=1e4, efficiency=1.0, marginal_cost=c)"),
 L(""),
-L("# processor capacity is a limit on the refinery's throughput, so it goes"),
-L("# on the links INTO it - there is no component for 'a refinery' as such"),
-L("for p, cap in procs.items():"),
-L("    for i in mines:"),
-L("        pass   # per-route limits would go here; the cap is enforced below"),
+L("# NOTE: processor capacity is NOT enforced below, and that is deliberate -"),
+L("# see the note under this cell. A refinery is a bus here, and a bus has no"),
+L("# capacity; the limit would have to go on the links INTO it. Exercise E.1."),
 L(""),
 L("n.optimize(solver_name=SOLVER, env=ENV)"),
 L("print(f'PyPSA cost ${n.objective:,.2f}   gurobipy cost ${base_cost:,.2f}')"),
-L("assert abs(n.objective - base_cost) < 1e-6, 'the two models disagree'"),
+L("assert relative(n.objective, base_cost) < AGREEMENT_RTOL, \\"),
+L("    'the two models disagree'"),
 L("print()"),
 L("print(n.links_t.p0.iloc[0].round(1).to_string())"),
 ))
@@ -472,10 +473,84 @@ L("Same number, to the cent. As always, PyPSA did not invent new mathematics; "
 L(""),
 L("> **Note what is missing.** The processor capacity is not enforced in the "
   "PyPSA version above, because a refinery here is a bus and a bus has no "
-  "capacity. In this instance it happens not to bind, so the answers agree. "
-  "**Making them disagree is Exercise E.1**: drop `China` capacity to 60 in "
+  "capacity. The answers still agree - but **not because the constraint is "
+  "slack.** China runs at exactly 120 of its 120 kt, so the constraint is "
+  "*active*; it is simply not *restrictive*, because the cheapest route is "
+  "already capped at 120 by the DRC mine. Delete it and nothing moves. Those "
+  "are two different things, and a model that agrees for the second reason "
+  "will stop agreeing the moment the instance shifts."),
+L(""),
+L("> **Making them disagree is Exercise E.1**: drop `China` capacity to 60 in "
   "the gurobipy model and re-solve, then work out where that limit has to go "
   "in PyPSA. (Hint: it is a property of the links, not of the bus.)"),
+))
+
+A(md(
+L("---"),
+L("### Does the package agree?"),
+L(""),
+L("Everything above was built by hand twice - once in gurobipy, once in "
+  "PyPSA - and those two already check each other. `esm.sourcing` solves the "
+  "same instance a third time, from the four tables in `data/raw/`, through "
+  "`scipy.optimize.linprog`."),
+L(""),
+L("**Why a third.** The two versions above were written by the same person "
+  "from the same table in the same sitting. A misread capacity is in both, "
+  "and they agree anyway. Reading the instance from disk and solving it with "
+  "a different library is what turns agreement into evidence - and it earned "
+  "its place here: writing `esm.sourcing` turned up a routing bug that the "
+  "base case could not see, because `Domestic` names both a mine and a "
+  "processor and the optimum never uses the Domestic refinery."),
+L(""),
+L("**What is compared, and why that is checked rather than assumed.** The "
+  "call to `assert_flows_are_unique` is not decoration. A refinery charges "
+  "the same to deliver to either plant, so if two refineries ever ran at "
+  "once the split between plants would be free and "
+  "those numbers would stop being comparable. Here one refinery carries "
+  "everything, so demand pins them - but that is a property of this "
+  "instance, not of the model. The check re-derives it from the current "
+  "tables, so an edit that introduces a tie fails with an explanation "
+  "instead of failing as a mismatch."),
+))
+
+A(code(
+L("# packaged_solve is aliased: this notebook has a solve_sourcing() of its"),
+L("# own in Part C that Part F still calls, and importing over that name"),
+L("# would work here and break a cell further down."),
+L("from esm.sourcing import (assert_flows_are_unique, load_sourcing_instance,"),
+L("                          processor_utilisation,"),
+L("                          solve_sourcing as packaged_solve)"),
+L(""),
+L("inst = load_sourcing_instance()"),
+L("assert_flows_are_unique(inst)   # Part 6: compare only what is determined"),
+L("packaged = packaged_solve(inst)"),
+L(""),
+L("checks = [('total cost', base_cost, packaged.cost)]"),
+L("checks += [(f'from {i}', by_mine[i], packaged.by_mine[i]) for i in mines]"),
+L("checks += [(f'{p} refined', by_proc[p], packaged.by_processor[p])"),
+L("           for p in procs]"),
+L("# the resilience curve too, so Part C's headline is asserted and not"),
+L("# merely printed"),
+L("for cap in (0.75, 0.60, 0.50, 0.40):"),
+L("    hand, _ = solve_sourcing(cap)"),
+L("    checks.append((f'cap {cap:.0%}', hand, packaged_solve(inst, cap).cost))"),
+L(""),
+L("print(f'{\"quantity\":18s} {\"by hand\":>12s} {\"package\":>12s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:18s} {hand:12.2f} {pkg:12.2f} {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L(""),
+L("print()"),
+L("print(f'notebook and package agree to {worst:.1e}')"),
+L("print()"),
+L("util = processor_utilisation(inst, packaged)"),
+L("print('refinery utilisation: '"),
+L("      + ', '.join(f'{p} {v:.0%}' for p, v in util.items())"),
+L("      + '   <- China is AT its cap, not below it')"),
 ))
 
 # ================================================================== part F

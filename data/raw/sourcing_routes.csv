@@ -1,0 +1,11 @@
+origin,destination,cost_per_kt
+DRC,China,2.0
+DRC,Domestic,6.0
+Australia,China,4.0
+Australia,Domestic,5.5
+Domestic,China,8.0
+Domestic,Domestic,3.0
+China,Cell Plant A,3.0
+China,Cell Plant B,3.0
+Domestic,Cell Plant A,5.0
+Domestic,Cell Plant B,5.0
