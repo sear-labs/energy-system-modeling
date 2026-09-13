@@ -316,6 +316,98 @@ L("*You priced this as a plant that sells into a market. If the same 250 MW "
 ))
 
 A(md(
+L("---"),
+L("### Does the package agree?"),
+L(""),
+L("`esm.lcoe` recomputes everything above from `data/raw/`. There is no "
+  "solver here, so agreement cannot mean two searches found the same "
+  "optimum - but there *is* a genuinely different second route, and it is "
+  "the one worth your attention."),
+L(""),
+L("**What you did above** was annualise the capital with a CRF, add fuel and "
+  "fixed costs, and divide the nominal total by the nominal lifetime energy. "
+  "**The definition of LCOE** is not that. It is discounted cost over "
+  "discounted energy:"),
+L(""),
+L("$$\text{LCOE} = \frac{\sum_t C_t/(1+r)^t}{\sum_t E_t/(1+r)^t}$$"),
+L(""),
+L("Those are different calculations. They agree here **only because the "
+  "annual energy is constant over the life** - both sums pick up the same "
+  "annuity factor and it cancels. That cancellation is the whole "
+  "justification for the shortcut every screening study uses, and it is "
+  "almost always assumed rather than shown."),
+L(""),
+L("> **Predict before you run it.** A solar array that loses half a percent "
+  "of its output every year breaks that cancellation. Before you look: does "
+  "the true LCOE come out above or below what the shortcut reports, and "
+  "roughly by how much over thirty years?"),
+))
+
+A(code(
+L("from esm.lcoe import (capital_recovery_factor, lcoe_by_crf, lcoe_by_dcf,"),
+L("                     load_lcoe_instance, screening_table)"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L(""),
+L("inst = load_lcoe_instance()"),
+L("pkg_screen = screening_table(inst)"),
+L(""),
+L("checks = [('CRF', crf, capital_recovery_factor(rate, life))]"),
+L("checks += [(f'{f} {hr} $/MWh',"),
+L("            fuel_bill(hr, COAL_HEAT_CONTENT if f == 'coal'"),
+L("                      else GAS_HEAT_CONTENT, p) / lifetime_mwh,"),
+L("            pkg_screen[(f, hr)])"),
+L("           for f, hr, p in"),
+L("           [('coal', h, q) for h, q in zip(coal_heat_rates, coal_prices)]"),
+L("           + [('gas', h, q) for h, q in zip(gas_heat_rates, gas_prices)]]"),
+L("# the notebook's OWN computed values, not the 2-dp figures it printed:"),
+L("# a displayed number is rounded, and AGREEMENT_RTOL is 1e-9."),
+L("nb_breakeven = {t: ((overnight[t] * crf * mw * years"),
+L("                    + fom[t] * mw * years"),
+L("                    + fuel_bill(*chosen[t])) / lifetime_mwh)"),
+L("                for t in chosen}"),
+L("checks += [(f'{t} break-even', nb_breakeven[t],"),
+L("            lcoe_by_crf(inst, inst.plants[(t, chosen[t][0])]))"),
+L("           for t in chosen]"),
+L(""),
+L("print(f'{\"quantity\":24s} {\"notebook\":>12s} {\"package\":>12s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:24s} {hand:12.4f} {pkg:12.4f} {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L("print()"),
+L("print(f'notebook and package agree to {worst:.1e}')"),
+))
+
+A(md(
+L("Now the part that is not a restatement."),
+))
+
+A(code(
+L("gas = inst.plants[('gas', 7500)]"),
+L(""),
+L("shortcut = lcoe_by_crf(inst, gas)"),
+L("definition = lcoe_by_dcf(inst, gas)"),
+L("degrading = lcoe_by_dcf(inst, gas, degradation=0.005)"),
+L(""),
+L("print(f'CRF shortcut, flat output      ${shortcut:6.2f}/MWh')"),
+L("print(f'DCF definition, flat output    ${definition:6.2f}/MWh')"),
+L("print(f'DCF definition, 0.5%/yr loss   ${degrading:6.2f}/MWh')"),
+L("print()"),
+L("print(f'the two routes agree to {relative(shortcut, definition):.1e}'"),
+L("      f' on flat output,')"),
+L("print(f'and diverge by {degrading / definition - 1:.1%} once it degrades.')"),
+L("print()"),
+L("print('The shortcut cannot see the degradation: it divides a nominal')"),
+L("print('total by a nominal total, and both fell by the same factor.')"),
+L("print('That is the limit of the method you just used - and the reason')"),
+L('print("a real study discounts the ENERGY as well as the money.")'),
+))
+
+
+A(md(
 L("### Bonus"),
 L(""),
 L("Use what you just computed to parameterise the three-node PyPSA example: "

@@ -1,0 +1,7 @@
+fuel,heat_rate_btu_per_kwh,heat_content_mmbtu_per_unit,fuel_unit,fuel_price_per_unit,overnight_per_mw,fom_per_mw_yr
+coal,8800,13.0,ton,15.00,3800000.0,45000.0
+coal,10000,13.0,ton,20.00,3800000.0,45000.0
+coal,11500,13.0,ton,30.00,3800000.0,45000.0
+gas,6400,1.036,Mcf,2.00,1050000.0,15300.0
+gas,7500,1.036,Mcf,2.50,1050000.0,15300.0
+gas,9000,1.036,Mcf,4.00,1050000.0,15300.0
