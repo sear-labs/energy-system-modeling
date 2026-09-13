@@ -22,9 +22,9 @@ each file here keeps the licence it arrived with.
 
 | file | licence | note |
 |---|---|---|
-| TX-123BT, Lu and Li 2023 | CC BY 4.0 | DOI `10.6084/m9.figshare.22144616`, attribution required |
+| TX-123BT, Lu and Li 2023 | CC BY 4.0 | DOI `10.6084/m9.figshare.22144616.v6`; **deliberately NOT vendored** — see below |
 | PyPSA technology-data costs | **GPL-3.0** | keep its notice beside it, do not relicense |
-| MATPOWER cases | **NOT BSD-3 — confirmed 2026-09-13** | see below; do not vendor on MATPOWER's licence |
+| `case_ACTIVSg2000.m` | **not MATPOWER's BSD** — Texas A&M free-use grant | **vendored 2026-09-13 on Jones's ruling**; see its sidecar |
 | Open-Meteo archive | CC BY 4.0 under their terms | an API; cache a snapshot |
 | TU Berlin cloud time series | **none stated** | **replace, do not vendor** |
 
@@ -38,6 +38,19 @@ directory its own terms.
 **The TU Berlin series has no licence and is behind a personal share link.** No
 stated licence is not permission, and a personal share link is not a source. It
 gets replaced with something citable rather than vendored.
+
+**TX-123BT is licensed to vendor and is still not vendored, on purpose.** It is
+CC BY 4.0, so there is no licence obstacle at all. The obstacle is size and
+pedagogy: the archive is **544 MB**, and `15_real_network_import` pulls
+**1,546 KB of it in 27 HTTP range requests**. That reader is the teaching
+content of the cell -- the printed line is literally "downloaded 1,546 KB in 27
+range requests instead of 544 MB". Vendoring the archive would add half a
+gigabyte to every clone and delete the lesson at the same time.
+
+If the network dependency ever has to go, the right move is to vendor the four
+extracted members (about 1.5 MB) with their own sidecar, and keep the
+range-request reader in the notebook as a demonstration against a small
+example. Not the whole archive.
 
 **The MATPOWER cases are NOT under MATPOWER's BSD licence, and the row above
 used to say they were.** Confirmed 2026-09-13 by reading MATPOWER's own
@@ -60,11 +73,12 @@ That is a clear grant to **use**. It is silent on **redistribution**, and the
 repository asks downloaders to fill in a form, which is a reason to think they
 would rather serve the file themselves than have it mirrored.
 
-**Recommendation: do not vendor it.** Keep the run-time fetch, record the
-provenance in a sidecar here, and cite Birchfield et al. If a vendored copy is
-wanted later, the honest route is to ask Texas A&M for redistribution
-permission in writing rather than to infer it — that is Jones's call, not a
-session's.
+**Recommended against vendoring; Jones ruled to vendor it, 2026-09-13.** The
+file is now here as `case_ACTIVSg2000.m`, with the full licence position, the
+recommendation, and the decision recorded in its sidecar so the reasoning
+travels with the file. Asking Texas A&M for written redistribution permission
+would still settle it properly, and the sidecar says how to reverse the
+decision if they object.
 
 Note this reverses the previous assumption in the direction that matters. "BSD-3
 in practice" was a guess, and the guess was the permissive one.
