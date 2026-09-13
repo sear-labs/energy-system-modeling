@@ -877,9 +877,10 @@ L("print(f'hand-built bill    ${bill_total / 1e6:10.4f} M/yr')"),
 L("print(f'peak it chose      {do_nothing.generators.p_nom_opt[\"grid\"]:10.2f} "
   "MW  (hand: {peak:.2f})')"),
 L(""),
-L("rel = abs(do_nothing.objective - bill_total) / bill_total"),
-L("assert rel < 1e-6, f'the wrapper does not reproduce the hand-built bill "
-  "({rel:.2e})'"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L("rel = relative(do_nothing.objective, bill_total)"),
+L("assert rel < AGREEMENT_RTOL, ("),
+L("    f'the wrapper does not reproduce the hand-built bill ({rel:.2e})')"),
 L("print()"),
 L("print('the wrapper reproduces the hand-built bill exactly.')"),
 ))
@@ -1158,6 +1159,94 @@ L(""),
 L("Every clause in that paragraph is a module. Nobody has to know that."),
 ))
 
+A(md(
+L("---"),
+L("### Does the package agree?"),
+L(""),
+L("`esm.facility` reads this site from `data/raw/` and solves the capacity "
+  "choice through `scipy.optimize.linprog` instead of PyPSA."),
+L(""),
+L("**It does not re-solve everything, and that boundary is worth more than "
+  "the agreement.** The bill, the solar economics and the no-storage cases "
+  "are genuinely re-solved. The battery case is not."),
+L(""),
+L("Reimplementing the battery would mean reproducing PyPSA's `StorageUnit` "
+  "from its documentation: state of charge across representative days, "
+  "cyclic closure, how round-trip efficiency splits between storing and "
+  "dispatching, and whether `snapshot_weightings` touches an energy balance "
+  "or only a cost. Those conventions are exactly what a second "
+  "implementation would have to guess - and a guess that happened to match "
+  "would look like evidence while being none. **An agreement you do not "
+  "trust is worse than an admission you did not check.**"),
+L(""),
+L("So the battery run is checked a different way. `recompute_objective()` "
+  "takes the dispatch PyPSA actually returned and rebuilds the cost from the "
+  "tariff, the day weights and the annualised capital. That verifies the "
+  "answer without claiming to have found it. The failure it realistically "
+  "catches is a weighting applied to the wrong term, which leaves every "
+  "capacity looking sensible and the annual total wrong by roughly the "
+  "number of days in a season."),
+))
+
+A(code(
+L("from esm.facility import (annual_bill, battery_annual_per_mw,"),
+L("                         load_facility_instance, recompute_objective,"),
+L("                         solar_lcoe, solve_site)"),
+L(""),
+L("inst = load_facility_instance()"),
+L("pkg_nothing = solve_site(inst, solar_max=0.0)"),
+L("pkg_solar = solve_site(inst, solar_max=ROOF_MW)"),
+L(""),
+L("checks = [('annual bill', bill_total, annual_bill(inst)),"),
+L("          ('solar $/MW-yr', solar_annual, inst.solar_annual_per_mw),"),
+L("          ('solar MWh/MW-yr', solar_per_mw, inst.solar_mwh_per_mw_yr),"),
+L("          ('solar LCOE $/MWh', lcoe, solar_lcoe(inst)),"),
+L("          ('battery $/MW-yr', BATT_ANNUAL, battery_annual_per_mw(inst)),"),
+L("          ('do nothing $/yr', do_nothing.objective, pkg_nothing.cost),"),
+L("          ('solar only $/yr', solar_only.objective, pkg_solar.cost),"),
+L("          ('solar built MW',"),
+L("           solar_only.generators.p_nom_opt['solar'], pkg_solar.solar_mw),"),
+L("          ('billed peak MW',"),
+L("           solar_only.generators.p_nom_opt['grid'], pkg_solar.grid_mw)]"),
+L(""),
+L("print(f'{\"quantity\":20s} {\"PyPSA / by hand\":>18s}'"),
+L("      f' {\"package\":>16s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:20s} {hand:18,.4f} {pkg:16,.4f}'"),
+L("          f' {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L("print()"),
+L("print(f'notebook and package agree to {worst:.1e}')"),
+))
+
+A(md(
+L("And the battery run, verified rather than re-solved:"),
+))
+
+A(code(
+L("# PyPSA's own dispatch, handed back to an independent cost function."),
+L("grid_dispatch = both.generators_t.p['grid'].to_numpy()"),
+L("rebuilt = recompute_objective("),
+L("    inst, grid_dispatch,"),
+L("    grid_mw=both.generators.p_nom_opt['grid'],"),
+L("    solar_mw=both.generators.p_nom_opt['solar'],"),
+L("    battery_mw=both.storage_units.p_nom_opt['battery'])"),
+L(""),
+L("print(f'PyPSA objective           ${both.objective:14,.2f} /yr')"),
+L("print(f'rebuilt from its dispatch ${rebuilt:14,.2f} /yr')"),
+L("print(f'relative difference        {relative(both.objective, rebuilt):13.1e}')"),
+L(""),
+L("assert relative(both.objective, rebuilt) < AGREEMENT_RTOL, ("),
+L("    'the reported objective is not what the reported dispatch costs')"),
+L("print()"),
+L("print('The objective is what its own dispatch actually costs.')"),
+L("print('That is a weaker claim than the table above, and it is the honest')"),
+L("print('one: nothing here re-solved the storage problem.')"),
+))
 A(md(
 L("### Your turn"),
 L(""),
