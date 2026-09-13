@@ -205,6 +205,17 @@ L("    link=dict(source=source_idx, target=target_idx, value=value),"),
 L("))"),
 L("fig.update_layout(title_text='One house, one year (kWh)',"),
 L("                  font_size=12, height=420)"),
+L(""),
+L("# Reused verbatim from the CARES Book figure manifest (F9_house_sankey),"),
+L("# where this same diagram is already described and reviewed. Kept identical"),
+L("# on purpose: two descriptions of one figure drift, and a reader meeting it"),
+L("# in the book and in the notebook should be told the same thing."),
+L("ALT_TEXT = ("),
+L("    'A Sankey diagram of one house over one year. Grid electricity, '"),
+L("    'natural gas and gasoline enter on the left and split into useful '"),
+L("    'and rejected energy on the right, with gasoline contributing by far '"),
+L("    'the largest share of the rejected block.')"),
+L(""),
 L("fig.show()"),
 ))
 
@@ -229,6 +240,78 @@ L(""),
 L("> This house comes out around 63% efficient. The LLNL chart puts the whole "
   "United States at roughly a third. Same physics, very different number - "
   "what is inside their boundary that is outside yours?"),
+))
+
+A(md(
+L("---"),
+L("### Does the package agree?"),
+L(""),
+L("`esm.balance` computes this same balance from `data/raw/house_energy.csv`. "
+  "**It is not a second solver, because there is nothing here to solve.** "
+  "Re-doing `billed x factor x efficiency` a second way would just be a "
+  "second copy of the same three multiplications, and a wrong conversion "
+  "factor would sit in both copies quite happily."),
+L(""),
+L("So the checks that carry weight here are a different kind, and the "
+  "difference is worth more than the numbers:"),
+L(""),
+L("1. **Conservation, exactly.** Useful plus rejected must equal input, per "
+  "source and in total. Arithmetic cannot get this right by accident."),
+L(""),
+L("2. **The units, rebuilt from primary definitions.** The real risk in a "
+  "notebook about units is a conversion factor, so that is what the second "
+  "implementation attacks. A therm *is* 100,000 Btu, and the Btu is exactly "
+  "defined, so that factor has a true value and can be checked."),
+L(""),
+L("**And one factor deliberately is not checked.** There is no exact kWh per "
+  "gallon of gasoline: heating value is measured, and varies by blend and "
+  "standard. The package says so out loud rather than leaving a silent gap, "
+  "because asserting a tolerance against a true value that does not exist "
+  "would be inventing precision. Notice which of your own numbers are "
+  "definitions and which are measurements - it is the same question as "
+  "asking which of them you are allowed to check."),
+))
+
+A(code(
+L("from esm.balance import (BTU_PER_THERM, conservation_residual,"),
+L("                        load_balance_instance, si_consistency,"),
+L("                        solve_balance, unverifiable_factors)"),
+L("from esm.tolerance import AGREEMENT_RTOL, relative"),
+L(""),
+L("inst = load_balance_instance()"),
+L("packaged = solve_balance(inst)"),
+L(""),
+L("checks = [('energy in', total_in, packaged.total_in),"),
+L("          ('useful', useful, packaged.total_useful),"),
+L("          ('rejected', rejected, packaged.total_rejected)]"),
+L("checks += [(f'{s} in', float(flows.set_index('source')['kWh'][s]),"),
+L("            packaged.kwh_in[s]) for s in packaged.kwh_in]"),
+L(""),
+L("print(f'{\"quantity\":26s} {\"notebook\":>12s} {\"package\":>12s} {\"rel diff\":>10s}')"),
+L("for label, hand, pkg in checks:"),
+L("    print(f'{label:26s} {hand:12,.1f} {pkg:12,.1f} {relative(hand, pkg):10.1e}')"),
+L(""),
+L("worst = max(relative(a, b) for _, a, b in checks)"),
+L("assert worst < AGREEMENT_RTOL, ("),
+L("    f'notebook and package disagree by {worst:.2e}, '"),
+L("    f'which is worse than {AGREEMENT_RTOL:.0e}')"),
+L("print()"),
+L("print(f'notebook and package agree to {worst:.1e}')"),
+L(""),
+L("# conservation, independently recomputed"),
+L("print()"),
+L("print('conservation residual, per source:')"),
+L("for name, res in conservation_residual(packaged).items():"),
+L("    print(f'  {name:24s} {res:+.2e} kWh')"),
+L(""),
+L("# the units, rebuilt from what a therm IS"),
+L("print()"),
+L("print(f'conversion factors with an exact definition'"),
+L("      f' (1 therm = {BTU_PER_THERM:,} Btu):')"),
+L("for name, (got, want, gap) in si_consistency(inst).items():"),
+L("    print(f'  {name:24s} table {got:<8} exact {want:<14.8f} gap {gap:.1e}')"),
+L("for name, unit in unverifiable_factors(inst).items():"),
+L("    print(f'  {name:24s} {unit} has no exact value - not checked')"),
 ))
 
 A(md(

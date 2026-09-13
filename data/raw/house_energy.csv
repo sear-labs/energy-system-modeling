@@ -1,0 +1,4 @@
+source,as_billed,unit,kwh_per_unit,efficiency,where_from
+grid electricity,10000,kWh,1.0,0.90,utility bill
+natural gas,600,therms,29.3,0.85,gas bill
+gasoline,500,gallons,33.7,0.25,fuel receipts
