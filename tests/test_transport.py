@@ -102,8 +102,14 @@ def test_unbalanced_instance_is_rejected_rather_than_silently_wrong():
 
 
 def test_a_local_edit_reaches_the_model(tmp_path):
-    """The property Part 4 rests on: editing data/raw/ changes the answer both
-    the notebook and the package see."""
+    """The loader honours the reader's edit.
+
+    Narrower than it looks, and deliberately so: this notebook states its
+    instance inline rather than reading these tables, so an edit here moves the
+    PACKAGE's answer only. What that buys is that `data/raw/` is genuinely the
+    package's source and not decoration -- if this failed, the agreement
+    assertion would be comparing two things that both ignore the files.
+    """
     src = ROOT / "data" / "raw"
     for name in ("transport_supply.csv", "transport_demand.csv",
                  "transport_routes.csv"):

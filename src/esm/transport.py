@@ -69,8 +69,17 @@ class TransportResult:
 def load_transport_instance(source=None):
     """The Texas crude-oil routing instance, from `data/raw/`.
 
-    Read through `esm.data.table`, so the notebook and this module read the same
-    three files and a reader who edits one sees the edit on both sides.
+    Read through `esm.data.table`. NOTE that the notebook states its
+    instance inline, in its "Sets and Parameters" cell, rather than reading
+    these files -- showing the numbers is the teaching point there. So the
+    tables and the notebook are two copies of one instance, and the agreement
+    assertion is what stops them drifting: change one and the costs stop
+    matching, which is what the assertion reports.
+
+    That means editing `data/raw/` alone does NOT change the notebook's own
+    answer, unlike `esm.power_flow`, whose notebook does read its tables. A
+    reader editing these files to explore should expect the agreement cell to
+    fail, and that failure is correct.
     """
     sup = table("transport_supply.csv", source=source)
     supply = dict(zip(sup["node"], sup["p_nom"].astype(float)))

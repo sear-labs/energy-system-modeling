@@ -96,13 +96,22 @@ class SourcingResult:
 def load_sourcing_instance(source=None):
     """The cobalt sourcing instance, from `data/raw/`.
 
-    Read through `esm.data.table`, so the notebook and this module read the same
-    four files and a reader who edits one sees the edit on both sides.
+    Read through `esm.data.table`. NOTE that the notebook states its
+    instance inline, in its "Sets and Parameters" cell, rather than reading
+    these files -- showing the numbers is the teaching point there. So the
+    tables and the notebook are two copies of one instance, and the agreement
+    assertion is what stops them drifting: change one and the costs stop
+    matching, which is what the assertion reports.
+
+    That means editing `data/raw/` alone does NOT change the notebook's own
+    answer, unlike `esm.power_flow`, whose notebook does read its tables. A
+    reader editing these files to explore should expect the agreement cell to
+    fail, and that failure is correct.
 
     The two route stages share one table, `sourcing_routes.csv`, and are told
-    apart by whether the origin is a mine. That is a derived fact rather than a
-    declared column on purpose: a `stage` column would be a second place to say
-    the same thing, and the two could disagree.
+    apart by their endpoints. That is derived rather than a declared column on
+    purpose: a `stage` column would be a second place to say the same thing,
+    and the two could disagree.
     """
     mn = table("sourcing_mines.csv", source=source)
     mines = dict(zip(mn["mine"], mn["capacity_kt"].astype(float)))
