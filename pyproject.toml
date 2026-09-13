@@ -17,12 +17,24 @@ keywords = ["energy system modeling", "optimization", "pypsa", "teaching"]
 # and both are needed -- a range says what will install, only the lock says what
 # ran.
 #
-# Deliberately narrow: this is what `esm` itself needs, which today is the data
-# layer only. PyPSA and the solvers belong to the notebooks and are installed by
-# their setup cell, so `pip install esm` does not drag a solver in.
+# What `esm` itself needs to run -- NOT what the notebooks need.
+#
+# The line between the two is whether the package can do its job without it.
+# PyPSA and gurobipy are imported inside `esm.power_flow`'s solve function and
+# are legitimately notebook-side: `esm.power_flow`'s own tests skip where PyPSA
+# is absent, which is the ordinary case for a reader who has not installed the
+# notebook extra.
+#
+# scipy is NOT in that category, even though it is likewise imported lazily.
+# `esm.transport.solve_transport` cannot solve anything without it, and
+# `tests/test_transport.py` does not skip -- so leaving scipy in the notebooks
+# extra meant CI (which installs only `.[dev]`) collected nine tests that could
+# not import. Lazy import is a load-time optimisation; it is not a statement
+# about whether the dependency is optional.
 dependencies = [
     "pandas>=3,<4",
     "requests>=2.31,<3",
+    "scipy>=1.15,<2",
 ]
 
 [project.urls]
@@ -38,7 +50,7 @@ notebooks = [
     "gurobipy>=11,<14",
     "pulp>=3,<4",
     "numpy>=2,<3",
-    "scipy>=1.15,<2",
+    # scipy is a base dependency of esm itself -- see the note above.
     "networkx>=3,<4",
     "openpyxl>=3.1,<4",
     "matplotlib>=3.9,<4",
