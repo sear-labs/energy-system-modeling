@@ -201,6 +201,8 @@ One click each, once the repository is public. Until then these resolve to a
 | `AppA_texas_multi_city_buildout.ipynb` | A multi-city Texas capacity buildout | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/capstone/AppA_texas_multi_city_buildout.ipynb) |
 | **`graduate/`** | | |
 | `model_diversity.ipynb` | Model diversity: the same system in a second tool | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/graduate/model_diversity.ipynb) |
+| **`p0_start/`** | | |
+| `00_start_here.ipynb` | Start here | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p0_start/00_start_here.ipynb) |
 | **`p1_foundations/`** | | |
 | `01_model_boundary.ipynb` | Where do you draw the boundary? | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p1_foundations/01_model_boundary.ipynb) |
 | `02_one_house_balance.ipynb` | An energy balance for one house | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sear-labs/energy-system-modeling/blob/main/notebooks/p1_foundations/02_one_house_balance.ipynb) |
