@@ -45,12 +45,15 @@ data/vendor/              third-party data, one sidecar per file
 notebooks/
   p1_foundations/         01_model_boundary.ipynb
                           02_one_house_balance.ipynb
+                          02_energy_arithmetic.ipynb                  ADDED 2026-10-22
                           README.md  -> teaching-code 12 for the toy LP and PyPSA
   p2_demand/              05_representative_days.ipynb
                           06_end_use_disaggregation.ipynb
+                          06_smart_meter_reading.ipynb                ADDED 2026-10-22
                           process_heat_electrification.ipynb          NEW
                           depot_charging.ipynb                        NEW
   p3_generation/          09_capital_and_lcoe.ipynb
+                          10_dispatch_and_carbon.ipynb                ADDED 2026-10-22
                           screening_curves.ipynb                      NEW
   p4_networks/            feeder_hosting_capacity.ipynb               NEW
                           pipeline_pressure_and_n1.ipynb              NEW
@@ -58,7 +61,8 @@ notebooks/
                           17_pipeline_transport.ipynb
                           18_power_flow_and_lmp.ipynb
                           15_real_network_import.ipynb
-  p5_storage_supply/      storage_duration_sizing.ipynb               NEW
+  p5_storage_supply/      19_battery_day.ipynb                        ADDED 2026-10-22
+                          storage_duration_sizing.ipynb               NEW
                           21_material_requirements.ipynb
                           README.md  -> teaching-code 12 battery, 13 transshipment
   capstone/               AppA_texas_multi_city_buildout.ipynb
@@ -69,20 +73,25 @@ tests/  tools/  tools/builders/
 
 ## The mapping table
 
-Twenty-two chapters, five case studies, one appendix. The only place chapter numbers appear.
-Section numbers are the chapter's own, from the manuscript.
+Twenty-three chapters, five case studies, nine appendices. The only place chapter numbers appear.
+Section numbers are the chapter's own, from the manuscript. **Re-checked against
+`CARES Book/Manuscript/` on 2026-10-22**: Part VI now holds Chapter 23, The Facility
+Decision, and Appendix A became *Writing the Capstone Final Report*, so the two
+capstone notebooks map to Chapter 23 and keep their `AppA_` filenames (see below).
 
 | ch | the section that wants it | companion |
 |---|---|---|
 | 1 | §1.4 Choosing the Boundary | `model_boundary` (motivating exception) |
 | 2 | §2.2 Visualizing the System: Energy Balances | `one_house_balance` |
+| 2 | §2.3 Energy, Power, and the Units a Modeler Uses; also §9.1, §9.3, §9.4, §12.4 | `energy_arithmetic` (needs no prerequisite, so anchored first) |
 | 3 | §3.3 Temporal and Spatial Linking; §3.4 The Same Price, From Both Sides | → teaching-code 12; forward-refs `representative_days`, `model_boundary` |
 | 4 | §4.6 Reference Models: 1-Node and 3-Node | → teaching-code 12 |
 | 5 | §5.3 Grounding Models in Grid Data | `representative_days` |
-| 6 | §6.2 Smart Meters, Time Series, Appliance Signatures (NILM) | `end_use_disaggregation` |
+| 6 | §6.2 Smart Meters, Time Series, Appliance Signatures (NILM) | `end_use_disaggregation` (grid scale); `smart_meter_reading` (one house) |
 | 7 | §7.2 Process Heat: Low, Medium, High Grade | `process_heat_electrification` NEW |
 | 8 | §8.2 Charging Infrastructure and Policy | `depot_charging` NEW |
 | 9 | §9.1 Core Generation Metrics | `capital_and_lcoe` |
+| 9–10 | §9.3 Running Versus Building; §9.4 Carbon in the Model; Ch 10 Thermal Generation | `dispatch_and_carbon` (anchored at 10) |
 | 10–12 | the three technology surveys | `screening_curves` NEW |
 | 13 | §13.2–13.3 Moving Electrons, Molecules and Solids | `cost_of_transit_by_mode` NEW |
 | 14 | §14.4 The Voltage Band and Hosting Capacity | `feeder_hosting_capacity` NEW |
@@ -91,7 +100,7 @@ Section numbers are the chapter's own, from the manuscript.
 | 17 | §17.2 The LP Formulation; §17.4 Expansion Trade Study | `pipeline_transport` |
 | 18 | §18.3 Congestion and LMP | `power_flow_and_lmp` |
 | 18 | §18.1 The Rail Constraint: Discrete vs Continuous | → teaching-code 05 |
-| 19 | §19.4 State-of-Charge; §19.5 Does the Battery Pay for Itself | → teaching-code 12 |
+| 19 | §19.4 State-of-Charge; §19.5 Does the Battery Pay for Itself | → teaching-code 12 for the build; `battery_day` for its value, the cyclic rule, and duration |
 | 20 | §20.2 The Storage Comparison | `storage_duration_sizing` NEW |
 | 21 | §21.4 A Reference Build, in Tons | `material_requirements` |
 | 22 | §22.1 The Transshipment Model | → teaching-code 13 |
@@ -100,7 +109,8 @@ Section numbers are the chapter's own, from the manuscript.
 | CS3 | Grid Evolution Data Benchmark | `screening_curves` supports it |
 | CS4 | §II The LP Formulation; grad ext. DCOPF | `pipeline_transport`, `power_flow_and_lmp` |
 | CS5 | §III The Transshipment Model | → teaching-code 13; `material_requirements` |
-| App A | the four sector mini-projects integrated | `facility_decision`, `texas_multi_city_buildout` |
+| 23 | §23.1–23.6 The Facility Decision | `facility_decision`, `texas_multi_city_buildout` |
+| App A | Writing the Capstone Final Report | none; it is a writing guide |
 
 ## What the chapter-text check moved
 
@@ -130,7 +140,7 @@ the subject of §15.5.
 |---|---|
 | 3 and 4 | `teaching-code` 12, which is REE Module 0 |
 | 18, discrete flow | `teaching-code` 05, branch and bound |
-| 19, battery and state of charge | `teaching-code` 12 |
+| 19, battery and state of charge | `teaching-code` 12 builds it; `battery_day` here asks what it is worth (agreed 2026-10-22) |
 | 22 and CS5, transshipment | `teaching-code` 13, REE Module 4's model |
 
 This shrinks the Module 4 split to almost nothing: its sourcing LP is already notebook 13, so only
@@ -349,6 +359,34 @@ Finally, in C:\Users\jonesec\dev\repo\teaching\teaching-code, repoint README.md 
 notebooks/12_energy_systems_pypsa/README.md at the new repository URL instead of
 the OneDrive path, and move this plan file into the new repository.
 ```
+
+## Added 2026-10-22, from the course's Fall 2026 class walkthroughs
+
+Four notebooks the plan did not list, because the course wrote them after it: the
+class walkthroughs for Modules 0, 1, 2 and 4. Each follows the placement rule above
+and each has an `esm` module and an agreement assertion.
+
+- `p1_foundations/02_energy_arithmetic` - the arithmetic Chapters 2, 9 and 12 assume.
+  It needs nothing, so it anchors first, as `model_boundary` does.
+- `p2_demand/06_smart_meter_reading` - §6.2 at the scale of one house. The course runs
+  it on one real household's meter export; **that file never comes here**, and the
+  notebook falls back to an invented house (`esm.meter.synthetic_export`).
+- `p3_generation/10_dispatch_and_carbon` - the merit order, PyPSA with fuel buses and
+  Links, a carbon price and a cap; §9.4's numbers. Agreed with `teaching-code`'s
+  maintainer for this part.
+- `p5_storage_supply/19_battery_day` - Chapter 19 beside `teaching-code` 12, on that
+  maintainer's three conditions: point at 12 for the build, assert against `esm`, and
+  name no charging hours (they tie).
+
+**The capstone filenames are now one step off the book.** `AppA_facility_decision`
+and `AppA_texas_multi_city_buildout` serve Chapter 23; Appendix A is now the capstone
+report guide. Renaming them would break any link already handed out, so they keep
+their names until someone decides otherwise, and this table is the authority.
+
+Not brought over, on purpose: the course's `M0_Toy_LP_to_PyPSA` (it is `teaching-code`
+12), `M4_Supply_Chain` (`teaching-code` 13), and the M4 assignment notebooks
+`Assignment_Storage_Grid_Balancer` and `Assignment_Material_Reality_Check`, which were
+found to be answer keys on 20 Oct 2026.
 
 ## Open, still
 

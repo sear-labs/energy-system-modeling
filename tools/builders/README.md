@@ -70,8 +70,23 @@ The names are the course's, and the notebooks have been renamed for their subjec
 | `build_sb6_notebook.py` | `capstone/AppA_texas_multi_city_buildout.ipynb` |
 | `build_m5_notebook.py` | `capstone/AppA_facility_decision.ipynb` |
 | `build_grad_m_notebook.py` | `graduate/model_diversity.ipynb` |
+| `build_start_here_notebook.py` | `p0_start/00_start_here.ipynb` |
+| `build_m0_energy_arithmetic_notebook.py` | `p1_foundations/02_energy_arithmetic.ipynb` |
+| `build_m1_smart_meter_notebook.py` | `p2_demand/06_smart_meter_reading.ipynb` |
+| `build_m2_dispatch_notebook.py` | `p3_generation/10_dispatch_and_carbon.ipynb` |
+| `build_m4_storage_notebook.py` | `p5_storage_supply/19_battery_day.ipynb` |
 
-Twelve builders, twelve notebooks, one to one.
+Seventeen builders, seventeen notebooks, one to one. The last four arrived on
+2026-10-22 from the course's Fall 2026 class walkthroughs; each one's docstring
+opens with what changed on the way and why. `build_m1_smart_meter_notebook.py`
+in particular does **not** read the course's class file - one real household's
+meter export - and its `verify()` stops the build if any cell names that file's
+location again.
+
+**Most of these take `--run`**, which executes every cell in the builder's own
+interpreter and checks the numbers the prose and the Explore questions depend
+on. It needs the `esm` environment, not the standard library: it imports PyPSA
+and, for the agreement cells, `src/esm`.
 
 ## The deck builders are not here, and must not be brought over
 
@@ -83,14 +98,18 @@ half of that folder across with them. Only `build_m5_notebook.py` from that name
 family is a notebook builder.
 
 The reliable test is the one `check_builders.py` already applies: it globs
-`build_*notebook*.py`, which selects exactly these twelve and no deck builder.
+`build_*notebook*.py`, which selects exactly these and no deck builder.
 Prefer that glob to reading the names.
 
 ## They are stdlib-only, which is why they travelled alone
 
-Every builder here imports only the standard library, with one exception:
-`build_supplychain_notebook.py` imports `gurobipy` inside its `verify()`, guarded.
-Nothing here needs `searkit` or any other course-folder helper.
+Every builder here imports only the standard library at module level, with two
+exceptions inside `verify()`: `build_supplychain_notebook.py` imports `gurobipy`,
+guarded, and `build_m4_storage_notebook.py` re-solves every case through
+`esm.storage` (numpy, scipy). Nothing here needs `searkit`, `fix_xrefs` or any
+other course-folder helper - the course's `build_m5_notebook.py` now calls
+`fix_xrefs.renumber()` to set slide numbers from its live decks, and this copy
+carries the resulting numbers instead (see its docstring).
 
 Each builder carries a `verify()` asserting its own arithmetic and a
 `syntax_check()` over its generated code cells. Keep both working, and record

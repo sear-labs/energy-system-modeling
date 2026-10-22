@@ -92,6 +92,23 @@ def test_the_url_names_a_ref_rather_than_floating(monkeypatch, tmp_path):
     assert f"/{D.DATA_REF}/" in D.RAW_BASE
 
 
+
+def test_the_ref_is_the_release_tag_for_this_version():
+    """Handed to students means tagged: DATA_REF is `v<__version__>`.
+
+    The rule lived in a comment until 2026-10-22, when the book's front matter
+    started linking this repository. A comment is read after the release that
+    shipped `main`; this fails before it.
+    """
+    import re
+    import esm
+    assert re.fullmatch(r"v\d+\.\d+\.\d+", D.DATA_REF), (
+        f"DATA_REF is {D.DATA_REF!r}, not a release tag: a notebook fetching it "
+        "would change its answer whenever someone edited a table on that ref")
+    assert D.DATA_REF == "v" + esm.__version__, (
+        f"DATA_REF {D.DATA_REF!r} does not match the package version "
+        f"{esm.__version__!r}: bump both together")
+
 def test_failure_explains_itself(monkeypatch, tmp_path):
     """Part 5: a cell that cannot get its data fails with an explanation.
 
