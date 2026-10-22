@@ -30,6 +30,7 @@ Prose rules this file follows, from that same note:
 Run from Tools/:  python build_sb3_notebook.py
 """
 import json
+import sys
 import os
 
 # tools/builders/<this file> -> tools/ -> the repository root.
@@ -421,6 +422,135 @@ L("- EIA for fuel prices and heat contents; both vary by region and year."),
 ))
 
 
+# ================================================================== explore
+# Jones, 20 Oct 2026: walked in class and used for a reflection - sliders plus
+# a cell where students add a plant themselves.  The slider reads step 7's
+# numbers (overnight, fom, chosen - the ones the student cited), so the
+# assignment's own cells are unchanged.  Step 7 assumes the plant runs every
+# hour; capacity factor is the one new dimension, and it is the one that
+# separates the two plants.
+A(md(
+L("---"),
+L("## Explore - for your reflection"),
+L(""),
+L("Nothing above changes. The slider reads the numbers you cited in step 7. "
+  "Step 7 assumed both plants run every hour for 30 years; the slider lets you "
+  "drop that. Answer the numbered questions in your reflection."),
+L(""),
+L("### Now the streamlined version"),
+L(""),
+L("Step 7 is wrapped into a function here, because a slider recomputes it every time it moves - and you have built every term of it by hand above. At a capacity factor of 1 it gives back step 7's break-even prices."),
+L(""),
+L("### Slide it: when the plant does not run all the time"),
+))
+A(code(
+L("from ipywidgets import interact, FloatSlider"),
+L("import matplotlib.pyplot as plt"),
+L(""),
+L("def breakeven(capacity_factor=1.0, rate=0.07, coal_price=20.0, gas_price=2.50):"),
+L("    crf_here = rate * (1 + rate) ** life / ((1 + rate) ** life - 1)"),
+L("    mwh = lifetime_mwh * capacity_factor"),
+L("    prices = {'coal': coal_price, 'gas': gas_price}"),
+L("    parts = {}"),
+L("    for tech, (hr, hc, _) in chosen.items():"),
+L("        parts[tech] = {"),
+L("            'capital': overnight[tech] * crf_here * mw * years / mwh,"),
+L("            'fixed O&M': fom[tech] * mw * years / mwh,"),
+L("            'fuel': fuel_bill(hr, hc, prices[tech]) * capacity_factor / mwh}"),
+L("    table = pd.DataFrame(parts).T"),
+L("    table['break-even $/MWh'] = table.sum(axis=1)     # sum first, then round"),
+L("    table = table.round(2)"),
+L("    print(table.to_string())"),
+L("    ax = table.drop(columns='break-even $/MWh').plot.barh(stacked=True, figsize=(7, 2.2))"),
+L("    for bars, hatch in zip(ax.containers, ('//', '..', '')):   # not colour alone"),
+L("        for bar in bars:"),
+L("            bar.set_hatch(hatch)"),
+L("    plt.xlim(0, 300); plt.xlabel('$/MWh')"),
+L("    ALT_TEXT = ('Stacked horizontal bars of break-even cost, one per plant, split '"),
+L("                'into capital, fixed O&M and fuel: ' + '; '.join("),
+L("                    f'{t} ${row[\"break-even $/MWh\"]:.2f}/MWh' for t, row in table.iterrows())"),
+L("                + f', at a {capacity_factor:.0%} capacity factor.')"),
+L("    plt.show()"),
+L(""),
+L("interact(breakeven,"),
+L("    capacity_factor=FloatSlider(min=0.05, max=1.0, step=0.05, value=1.0, description='capacity f.'),"),
+L("    rate=FloatSlider(min=0.02, max=0.15, step=0.005, value=0.07, description='rate'),"),
+L("    coal_price=FloatSlider(min=10, max=60, step=1, value=20, description='coal $/ton'),"),
+L("    gas_price=FloatSlider(min=1, max=10, step=0.1, value=2.5, description='gas $/Mcf'));"),
+))
+A(md(
+L("> **1.** Lower the capacity factor to 50 percent, then 20 percent. Which plant's "
+  "break-even rises faster? Does that change your answer to step 7's last "
+  "question?"),
+L(">"),
+L("> **2.** Move the discount rate from 7 to 12 percent. Which plant cares more? Why "
+  "might a regulated utility and a merchant developer put different numbers "
+  "here?"),
+L(">"),
+L("> **3.** At a 60 percent capacity factor, find the gas price at which the two "
+  "plants break even at the same $/MWh. Is that a price you have seen?"),
+L(""),
+L("### Edit and run: add a solar plant"),
+L(""),
+L("Fill in the blanks from the ATB (cite the edition), then run. Solar has no "
+  "fuel bill, and it runs only when the sun does."),
+))
+A(code(
+L("solar_overnight = None      # ___ $/MW"),
+L("solar_fom = None            # ___ $/MW-yr"),
+L("solar_cf = 0.25             # share of the year at full output; replace with your site's"),
+L(""),
+L("if solar_overnight is None or solar_fom is None:"),
+L("    print('fill in solar_overnight and solar_fom first')"),
+L("else:"),
+L("    solar_breakeven = (solar_overnight * crf + solar_fom) / (8760 * solar_cf)"),
+L("    print(f'solar break-even ${solar_breakeven:.2f}/MWh')"),
+))
+A(md(
+L("> **4.** What does solar's break-even depend on that neither thermal plant's "
+  "does? If its capacity factor fell from 0.25 to 0.20, by what fraction would "
+  "the break-even rise - and could you have said so before running it?"),
+))
+
+
+def run(cells):
+    """Execute every cell and check the slider against step 7."""
+    import contextlib, io, re
+    import matplotlib
+    matplotlib.use("Agg")
+    sys.path.insert(0, os.path.join(ROOT, "src"))      # the agreement cell imports esm
+    ns = {}
+    for i, c in enumerate(cells):
+        if c["cell_type"] != "code":
+            continue
+        with contextlib.redirect_stdout(io.StringIO()):
+            exec(compile("".join(c["source"]), "<cell %d>" % i, "exec"), ns)
+
+    def said(**kw):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            ns["breakeven"](**kw)
+        return buf.getvalue()
+    def be(text, tech):
+        return float(re.search(r"^" + tech + r"\s.*\s([\d.]+)\s*$", text, re.M).group(1))
+    full = said()
+    for tech, (hr, hc, price) in ns["chosen"].items():
+        cap = ns["overnight"][tech] * ns["crf"] * ns["mw"] * ns["years"]
+        fixed = ns["fom"][tech] * ns["mw"] * ns["years"]
+        step7 = (cap + fixed + ns["fuel_bill"](hr, hc, price)) / ns["lifetime_mwh"]
+        # to the cent: the course copy summed parts AFTER rounding them, and
+        # printed gas at $29.51 against step 7's $29.50
+        assert abs(be(full, tech) - step7) < 0.005, (tech, be(full, tech), step7)
+    # Q1: coal's break-even rises faster as the capacity factor falls
+    half = said(capacity_factor=0.5)
+    assert be(half, "coal") - be(full, "coal") > be(half, "gas") - be(full, "gas")
+    # Q3: at 60% the two meet at a gas price inside the slider's range
+    lo, hi = said(capacity_factor=0.6, gas_price=1.0), said(capacity_factor=0.6, gas_price=10.0)
+    assert be(lo, "gas") < be(lo, "coal") and be(hi, "gas") > be(hi, "coal")
+    print("run: slider at 100%% reproduces step 7 (coal $%.2f, gas $%.2f); Q1 and Q3 hold"
+          % (be(full, "coal"), be(full, "gas")))
+
+
 def syntax_check(cells):
     bad = 0
     for i, c in enumerate(cells):
@@ -449,6 +579,8 @@ NOTEBOOK = {"cells": C,
 if __name__ == "__main__":
     verify()
     syntax_check(C)
+    if "--run" in sys.argv:
+        run(C)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(NOTEBOOK, f, indent=1, ensure_ascii=False)

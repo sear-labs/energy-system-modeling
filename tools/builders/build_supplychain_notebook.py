@@ -389,9 +389,10 @@ L("print(pd.DataFrame(rows).to_string(index=False))"),
 
 A(md(
 L("> **This is a price curve for resilience, and you can read it off the "
-  "table.** Capping any one mine at 75% costs 10%. At 50% it costs 20%, and "
-  "Australia enters the mix. At 40% it costs 28% and the domestic mine - the "
-  "most expensive tonne in the problem - finally gets bought."),
+  "table.** Capping any one mine at 75% costs 10%, and Australia enters the "
+  "mix. At 50% it costs 20%, with Australia supplying half. At 40% it costs "
+  "28% and the domestic mine - the most expensive tonne in the problem - "
+  "finally gets bought."),
 L(">"),
 L("> Nothing here says which cap is right. That is a judgement about how much "
   "disruption risk is worth, and it belongs to a person. **What the model "
