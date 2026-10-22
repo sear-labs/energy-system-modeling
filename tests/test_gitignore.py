@@ -36,9 +36,16 @@ REPO = Path(__file__).resolve().parent.parent
 
 def is_ignored(relpath):
     """True if git would ignore `relpath`. Uses check-ignore, so it tests the
-    real matcher rather than a reimplementation of glob semantics."""
+    real matcher rather than a reimplementation of glob semantics.
+
+    `core.ignorecase=false` makes the matcher case-SENSITIVE everywhere, as it
+    is on the Linux CI runner. On Windows git defaults to case-insensitive, so
+    a lowercase-only pattern passed here and failed on CI (2026-10-22,
+    MP4_Solution_Key.ipynb against `*solution_key*`). A clone on Linux or macOS
+    is what has to be protected, so that is the behaviour tested."""
     r = subprocess.run(
-        ["git", "check-ignore", "-q", "--no-index", "--", relpath],
+        ["git", "-c", "core.ignorecase=false", "check-ignore", "-q", "--no-index",
+         "--", relpath],
         cwd=REPO, capture_output=True,
     )
     if r.returncode not in (0, 1):

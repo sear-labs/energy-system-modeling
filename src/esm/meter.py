@@ -76,7 +76,7 @@ def synthetic_export(seed=4301, year=2025):
     step_hour = np.arange(n) / STEPS_PER_HOUR
     kw_days = []
     for day in days:
-        doy, weekend = day.dayofyear, day.dayofweek >= 5
+        doy, weekend = day.day_of_year, day.day_of_week >= 5
         # outdoor temperature, F: a seasonal swing, a daily swing, a daily draw
         temp = (68 + 18 * np.cos(2 * np.pi * (doy - 200) / 365)
                 + 9 * np.sin(2 * np.pi * (step_hour - 9) / 24)
@@ -140,7 +140,7 @@ def hourly_profile(kw):
     """Average kW by hour of day, weekdays and weekends, by whole-day reshapes."""
     days = kw.index.normalize()
     out = {}
-    for label, keep in (("weekday", days.dayofweek < 5), ("weekend", days.dayofweek >= 5)):
+    for label, keep in (("weekday", days.day_of_week < 5), ("weekend", days.day_of_week >= 5)):
         block = kw.to_numpy()[keep]
         hours = kw.index.hour.to_numpy()[keep]
         sums = np.bincount(hours, weights=block, minlength=24)

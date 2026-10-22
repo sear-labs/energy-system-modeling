@@ -162,7 +162,7 @@ A(md(
 L("## Part B - The shape"),
 ))
 A(code(
-L("hourly = kw.groupby([kw.index.dayofweek >= 5, kw.index.hour]).mean().unstack(0)"),
+L("hourly = kw.groupby([kw.index.day_of_week >= 5, kw.index.hour]).mean().unstack(0)"),
 L("hourly.columns = ['weekday', 'weekend']"),
 L("ax = hourly.plot(figsize=(8, 3), xlabel='hour of day', ylabel='average kW',"),
 L("                 style=['-', '--'])         # line style as well as colour"),

@@ -76,8 +76,13 @@ Student Work/
 IntervalData*
 *IntervalData*.csv
 *interval_data*.csv
-# Solution keys are never published, and never named to students.
+# Solution keys are never published, and never named to students. Both
+# cases spelled out: git matches these case-SENSITIVELY on Linux, where CI runs,
+# and case-insensitively on this Windows machine -- so `*solution_key*` alone
+# passed here and let MP4_Solution_Key.ipynb through on the runner.
 *Solution Key*
+*solution key*
+*Solution_Key*
 *solution_key*
 Solution Keys/
 

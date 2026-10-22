@@ -49,7 +49,7 @@ def test_it_is_a_plausible_texas_house(raw, kw):
 
 def test_the_summaries_match_the_pandas_route(kw):
     """The notebook's groupby and diff, against this module's numpy route."""
-    by_pandas = kw.groupby([kw.index.dayofweek >= 5, kw.index.hour]).mean().unstack(0)
+    by_pandas = kw.groupby([kw.index.day_of_week >= 5, kw.index.hour]).mean().unstack(0)
     by_numpy = hourly_profile(kw)
     assert np.allclose(by_pandas[False].to_numpy(), by_numpy["weekday"].to_numpy(),
                        rtol=1e-12)
