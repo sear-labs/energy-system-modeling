@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "esm"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "Companion package for the open textbook Introduction to Energy System Modeling"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -31,7 +31,12 @@ keywords = ["energy system modeling", "optimization", "pypsa", "teaching"]
 # extra meant CI (which installs only `.[dev]`) collected nine tests that could
 # not import. Lazy import is a load-time optimisation; it is not a statement
 # about whether the dependency is optional.
+#
+# numpy is here for the same reason: `esm.meter` and `esm.storage` import it
+# directly (2026-10-22). pandas brings it anyway, but a direct import resting on
+# a transitive one is an undeclared dependency with a delay on it.
 dependencies = [
+    "numpy>=2,<3",
     "pandas>=3,<4",
     "requests>=2.31,<3",
     "scipy>=1.15,<2",
