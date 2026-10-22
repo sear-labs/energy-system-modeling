@@ -71,10 +71,12 @@ import pandas as pd
 
 REPO = "sear-labs/energy-system-modeling"
 
-# Set to a release tag before handing a link to students; see the module
-# docstring. Part 1 rule 8: tag what you hand out, so ongoing development never
-# invalidates a published result.
-DATA_REF = "main"
+# A release tag, because a link has been handed to students: the book's front
+# matter names this repository (2026-10-22). Part 1 rule 8: tag what you hand
+# out, so ongoing development never invalidates a published result. It moves
+# with `__version__` -- tests/test_data_loader.py fails if the two disagree, so
+# a release cannot ship still fetching the previous one's tables.
+DATA_REF = "v0.1.0"
 
 RAW_BASE = f"https://raw.githubusercontent.com/{REPO}/{DATA_REF}/data/raw"
 

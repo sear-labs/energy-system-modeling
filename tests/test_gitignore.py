@@ -36,9 +36,16 @@ REPO = Path(__file__).resolve().parent.parent
 
 def is_ignored(relpath):
     """True if git would ignore `relpath`. Uses check-ignore, so it tests the
-    real matcher rather than a reimplementation of glob semantics."""
+    real matcher rather than a reimplementation of glob semantics.
+
+    `core.ignorecase=false` makes the matcher case-SENSITIVE everywhere, as it
+    is on the Linux CI runner. On Windows git defaults to case-insensitive, so
+    a lowercase-only pattern passed here and failed on CI (2026-10-22,
+    MP4_Solution_Key.ipynb against `*solution_key*`). A clone on Linux or macOS
+    is what has to be protected, so that is the behaviour tested."""
     r = subprocess.run(
-        ["git", "check-ignore", "-q", "--no-index", "--", relpath],
+        ["git", "-c", "core.ignorecase=false", "check-ignore", "-q", "--no-index",
+         "--", relpath],
         cwd=REPO, capture_output=True,
     )
     if r.returncode not in (0, 1):
@@ -74,6 +81,16 @@ MUST_BE_IGNORED = [
     "roster.csv",
     "gradebook.xlsx",
     "Student Work/paper.docx",
+    # one household's smart-meter export -- the course's class file by name,
+    # and a student's own export saved beside the notebook
+    "IntervalData.csv",
+    "IntervalData (1).csv",
+    "notebooks/p2_demand/IntervalData.csv",
+    "notebooks/p2_demand/my_IntervalData_2025.csv",
+    # solution keys
+    "Solution Keys/M2 key.ipynb",
+    "MP4_Solution_Key.ipynb",
+    "mp4_solution_key.ipynb",
     # Canvas tooling and anything it caches
     "Tools/canvas_probe.py",
     "Tools/canvas_dryrun.py",
@@ -122,6 +139,20 @@ MUST_NOT_BE_IGNORED = [
     "notebooks/capstone/AppA_texas_multi_city_buildout.ipynb",
     "notebooks/capstone/AppA_facility_decision.ipynb",
     "notebooks/graduate/model_diversity.ipynb",
+    "notebooks/p1_foundations/02_energy_arithmetic.ipynb",
+    "notebooks/p2_demand/06_smart_meter_reading.ipynb",
+    "notebooks/p3_generation/10_dispatch_and_carbon.ipynb",
+    "notebooks/p5_storage_supply/19_battery_day.ipynb",
+    "tools/builders/build_m0_energy_arithmetic_notebook.py",
+    "tools/builders/build_m1_smart_meter_notebook.py",
+    "tools/builders/build_m2_dispatch_notebook.py",
+    "tools/builders/build_m4_storage_notebook.py",
+    "src/esm/arithmetic.py",
+    "src/esm/dispatch.py",
+    "src/esm/meter.py",
+    "src/esm/storage.py",
+    "data/raw/battery_day_profile.csv",
+    "notebooks/p5_storage_supply/README.md",
     # what sessions 3 and 5 will add
     "src/esm/__init__.py",
     "src/esm/power_flow.py",

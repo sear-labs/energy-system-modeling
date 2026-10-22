@@ -7,6 +7,7 @@ doing when you stop writing the linear program yourself.
 |---|---|---|
 | `01_model_boundary.ipynb` | 1, §1.4 Choosing the Boundary | the motivating exception: it anchors at the *first* chapter because it raises the question the rest of Part I answers |
 | `02_one_house_balance.ipynb` | 2, §2.2 Visualizing the System: Energy Balances | one house, at the reader's own scale, where the therm and gallon conversions stay visible instead of vanishing into quads |
+| `02_energy_arithmetic.ipynb` | 2, §2.3 Energy, Power, and the Units a Modeler Uses; also §9.1, §9.3, §9.4, §12.4 | the arithmetic every later model assumes - kW and kWh, the Btu chain, heat rate, marginal cost, CO2 per MWh, capacity factor, sun and wind, CRF and LCOE - once each, with no solver. Needs nothing, so it can be run first |
 
 ## The toy LP and the PyPSA introduction are not here, on purpose
 

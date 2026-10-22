@@ -73,10 +73,13 @@ and it is resolved when the course starts teaching from this repository instead.
   `band_trims`, `fitpass`). Only `build_m5_notebook.py` from that name family is a notebook builder.
   `check_builders.py` globs `build_*notebook*.py`, which is the same distinction, arrived at
   independently.
-- **No `src/esm`, and therefore no agreement assertion in any notebook.** Twelve notebooks build
-  models by hand with nothing to check them against. That is Part 4's whole mechanism missing, and
-  it is session 3's work. `tools/check_notebooks.py` reports it per notebook rather than letting it
-  pass quietly.
+- **No course class data, and no solution key, ever.** The course's smart-meter walkthrough runs on
+  one real household's export (`IntervalData.csv`); here `06_smart_meter_reading` reads the
+  reader's own export or falls back to `esm.meter.synthetic_export`, and `.gitignore` refuses the
+  file by name. The course's M4 assignment notebooks `Assignment_Storage_Grid_Balancer` and
+  `Assignment_Material_Reality_Check` were found to be answer keys (20 Oct 2026) and are not here;
+  nor is `M4_Supply_Chain`, which is `teaching-code` 13.
+- *(Superseded 2026-09-13: `src/esm` exists and every notebook carries an agreement assertion.)*
 - **No outputs after a deliberate blank.** Two notebooks stop where the student must choose, and
   they are committed executed up to exactly that cell. That is the state a student opens them in,
   not an interrupted run.
@@ -119,8 +122,8 @@ does not gate anything.
 
 | notebook | assignment | shape |
 |---|---|---|
-| `06_end_use_disaggregation` | 1N | **scaffold** — stops at cell 51, the student chooses the technology |
-| `AppA_facility_decision` | *(not an assignment)* | **scaffold** — stops at cell 66, the student writes the recommendation |
+| `06_end_use_disaggregation` | 1N | **scaffold** — stops at cell 54, the student chooses the technology |
+| `AppA_facility_decision` | *(not an assignment)* | **scaffold** — stops at cell 71, the student writes the recommendation |
 | `02_one_house_balance` | SB1-SPEC | worked example |
 | `05_representative_days` | SB2 | worked example |
 | `09_capital_and_lcoe` | SB3 | worked example |
@@ -135,6 +138,15 @@ the Sankey."* An example that stops short of the deliverable is exactly where th
 student most needed to see the shape. Every one of these assignments asks the
 student for **their own instance**, so a worked example on a fixed instance shows
 the method without doing their work.
+
+*(Cell numbers re-measured 2026-10-22; both had moved when setup cells were generated.)*
+
+**The four class walkthroughs added 2026-10-22** — `02_energy_arithmetic`,
+`06_smart_meter_reading`, `10_dispatch_and_carbon`, `19_battery_day` — are worked
+examples on fixed instances of the author's own, and each ends in an **Explore**
+section of sliders and edit-and-run cells the student uses for a reflection. The
+course's reflection is graded on the student's reasoning, not on any value these
+notebooks print, so the test below puts them on the example side.
 
 **The test to apply to a new notebook** is therefore not "is this an assignment"
 but: *does it work the instance the student was told to bring?* If yes, it needs

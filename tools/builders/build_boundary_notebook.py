@@ -29,6 +29,7 @@ scarcity tail of the stack.
 Run from Tools/:  python build_boundary_notebook.py
 """
 import json
+import sys
 import os
 
 # tools/builders/<this file> -> tools/ -> the repository root.
@@ -672,6 +673,163 @@ L("- The site, the investors and the 600 MW agreement are invented; the "
 ))
 
 
+# ================================================================== explore
+# Jones, 20 Oct 2026: a reflection assignment - sliders plus a cell where
+# students edit the supply stack themselves.  explore_site() rebuilds Part B's
+# grid with their numbers, so Parts A-F stay as walked in class.
+A(md(
+L("---"),
+L("## Explore - for your reflection"),
+L(""),
+L("Nothing above changes. The slider cell rebuilds Part B's grid with your "
+  "numbers and solves it twice - without the site and with it - when you press "
+  "**Run Interact**. The **edit-and-run** cell asks you to change the supply "
+  "stack yourself. Answer the numbered questions in your reflection."),
+L(""),
+L("### Now the streamlined version"),
+L(""),
+L("Part B's grid is wrapped into a function here, because a slider re-solves it every time it moves - and you have built every piece of it by hand above. Run with the defaults, it gives back Part D's 84.2% error at 500 MW."),
+L(""),
+L("### Slide it: how big is too big?"),
+))
+A(code(
+L("from ipywidgets import interact_manual, FloatSlider, fixed"),
+L("import matplotlib.pyplot as plt"),
+L("import logging"),
+L("for name in ('pypsa', 'linopy'):"),
+L("    logging.getLogger(name).setLevel(logging.ERROR)"),
+L("warnings.filterwarnings('ignore', message='.*include_objective_constant')"),
+L(""),
+L("def explore_site(site_mw=500.0, extra_wind_mw=0.0, scarcity_price=2000.0,"),
+L("                 agreement_mw=600.0, stack=None):"),
+L("    \"\"\"Part B's grid with your numbers: the bill a price taker predicts, and"),
+L("    the bill it actually gets.\"\"\""),
+L("    units = [(nm, mw, scarcity_price if nm == 'scarcity' else c)"),
+L("             for nm, mw, c in (STACK if stack is None else stack)]"),
+L(""),
+L("    def solve(site):"),
+L("        k = pypsa.Network()"),
+L("        k.set_snapshots(hours)"),
+L("        k.add('Bus', 'Dallas')"),
+L("        k.add('Bus', 'Site')"),
+L("        k.add('Generator', 'wind', bus='Dallas', p_nom=5000 + extra_wind_mw,"),
+L("              marginal_cost=0, p_max_pu=pd.Series(wind_pu, index=hours))"),
+L("        for name, mw, cost in units:"),
+L("            k.add('Generator', name, bus='Dallas', p_nom=mw, marginal_cost=cost)"),
+L("        k.add('Load', 'metro', bus='Dallas', p_set=pd.Series(metro, index=hours))"),
+L("        k.add('Link', 'interconnection', bus0='Dallas', bus1='Site',"),
+L("              p_nom=agreement_mw, efficiency=1.0)"),
+L("        if site > 0:"),
+L("            k.add('Load', 'site', bus='Site', p_set=float(site))"),
+L("        status, condition = k.optimize(solver_name=SOLVER, env=ENV,"),
+L("                                       log_to_console=False)"),
+L("        return k if condition == 'optimal' else None"),
+L(""),
+L("    base, with_site = solve(0), solve(site_mw)"),
+L("    if base is None:"),
+L("        print('this supply stack cannot serve the metro on its own')"),
+L("        return"),
+L("    if with_site is None:"),
+L("        print(f'will not solve with a {site_mw:.0f} MW site: no dispatch meets every '"),
+L("              f'constraint. Which one? Look at the agreement and the stack.')"),
+L("        return"),
+L("    p0 = base.buses_t.marginal_price['Dallas']"),
+L("    p1 = with_site.buses_t.marginal_price['Dallas']"),
+L("    predicted, actual = (p0 * site_mw).sum(), (p1 * site_mw).sum()"),
+L("    moved = int((~np.isclose(p0, p1)).sum())"),
+L("    print(f'site {site_mw:.0f} MW: moved the price in {moved} of 24 hours')"),
+L("    print(f'predicted bill ${predicted:,.0f}/day   actual ${actual:,.0f}/day   '"),
+L("          f'error {(actual / predicted - 1) * 100:.1f} %')"),
+L("    print(f'extra cost to the metro ${((p1 - p0) * metro).sum():,.0f}/day')"),
+L("    plt.figure(figsize=(9, 2.8))"),
+L("    plt.step(hours, p0, where='mid', label='without the site')"),
+L("    plt.step(hours, p1, where='mid', ls='--', label='with the site')   # not colour alone"),
+L("    plt.yscale('log'); plt.ylabel('$/MWh (log scale)'); plt.xlabel('hour')"),
+L("    plt.legend()"),
+L("    ALT_TEXT = (f'Step chart of the Dallas price over 24 hours on a log scale, '"),
+L("                f'without the site (solid) and with a {site_mw:.0f} MW site (dashed). '"),
+L("                f'The two differ in {moved} hours; the dearest hour is '"),
+L("                f'${p0.max():,.0f}/MWh without the site and ${p1.max():,.0f}/MWh with it.')"),
+L("    plt.show()"),
+L(""),
+L("interact_manual(explore_site,"),
+L("    site_mw=FloatSlider(min=0, max=900, step=25, value=500, description='site MW'),"),
+L("    extra_wind_mw=FloatSlider(min=0, max=4000, step=250, value=0, description='+ wind MW'),"),
+L("    scarcity_price=FloatSlider(min=500, max=5000, step=250, value=2000, description='scarcity $'),"),
+L("    agreement_mw=FloatSlider(min=100, max=1000, step=50, value=600, description='agreement MW'),"),
+L("    stack=fixed(None));"),
+))
+A(md(
+L("> **1.** Start at 50 MW and raise the site in steps of 50. At what size does "
+  "the bill error pass 5 percent? 20 percent?"),
+L(">"),
+L("> **2.** Add 2,000 MW of wind and repeat. Does the line move? Who would want to "
+  "know that before signing a lease on the site?"),
+L(">"),
+L("> **3.** With the 500 MW site, set the scarcity price to $5,000 - ERCOT's old "
+  "offer cap. Predict first, then run. If nothing moved, raise the agreement to "
+  "1,000 MW and the site to 700 MW, and try both scarcity prices. What is setting "
+  "the price in the dearest hour in each case?"),
+L(">"),
+L("> **4.** Shrink the agreement to 400 MW with the 500 MW site. What does the "
+  "model tell you, and what would you tell the investors?"),
+L(""),
+L("### Edit and run: change the supply stack"),
+L(""),
+L("Uncomment one edit (or write your own), then run. `STACK` itself is untouched."),
+))
+A(code(
+L("my_stack = list(STACK)"),
+L(""),
+L("# my_stack[7] = ('gas08', 600, 45.)       # replace the $90 unit with an efficient new one"),
+L("# my_stack.append(('battery', 300, 95.))   # a 300 MW resource that bids $95"),
+L("# my_stack.pop(7)                          # retire gas08 altogether"),
+L(""),
+L("explore_site(500, stack=my_stack)"),
+))
+A(md(
+L("> **5.** Before you run each edit: does the data centre's error go up or down? "
+  "Which single change to the stack moves it most, and why that one? What does "
+  "that tell you about where a large load should want new capacity built?"),
+))
+
+
+def run(cells):
+    """Execute every cell (pip lines skipped) and check explore_site."""
+    import contextlib, io, logging, re
+    import matplotlib
+    matplotlib.use("Agg")
+    logging.disable(logging.CRITICAL)
+    sys.path.insert(0, os.path.join(ROOT, "src"))      # the agreement cell imports esm
+    ns = {}
+    for i, c in enumerate(cells):
+        if c["cell_type"] != "code":
+            continue
+        src = "\n".join(l for l in "".join(c["source"]).splitlines()
+                        if not l.strip().startswith("!"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            exec(compile(src, "<cell %d>" % i, "exec"), ns)
+
+    def said(*a, **kw):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            ns["explore_site"](*a, **kw)
+        return buf.getvalue()
+    def err(text):
+        return float(re.search(r"error (-?[\d.]+) %", text).group(1))
+    assert abs(err(said(50)) - 3.6) < 0.1 and abs(err(said(500)) - 84.2) < 0.1
+    assert "will not solve" in said(500, agreement_mw=400)
+    assert "will not solve" in said(900)
+    windy = err(said(500, extra_wind_mw=2000))
+    dear = err(said(500, scarcity_price=5000))
+    assert dear == err(said(500))                     # Q3: no effect at 500 MW ...
+    big, big_dear = err(said(700, agreement_mw=1000)), err(said(700, agreement_mw=1000, scarcity_price=5000))
+    assert big_dear > big + 100                       # ... a large one at 700 MW
+    print("run: explore_site reproduces Parts C-E (3.6%% at 50 MW, 84.2%% at 500 MW, "
+          "infeasible past the agreement); +2 GW wind -> %.1f%%, $5,000 scarcity -> %.1f%%"
+          % (windy, dear))
+
+
 def syntax_check(cells):
     bad = 0
     for i, c in enumerate(cells):
@@ -706,6 +864,8 @@ NOTEBOOK = {
 if __name__ == "__main__":
     verify()
     syntax_check(C)
+    if "--run" in sys.argv:
+        run(C)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(NOTEBOOK, f, indent=1, ensure_ascii=False)

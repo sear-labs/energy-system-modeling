@@ -1,7 +1,10 @@
 # Authored instance tables
 
-**Still empty.** Session 3 fills it, starting with `power_flow_and_lmp`, and
-sessions 4–6 follow the same pattern.
+The instance tables behind the notebooks' agreement assertions: each is read by
+the package and, where the notebook does not state the instance inline, by the
+notebook too. `battery_day_profile.csv` (added 2026-10-22) is `19_battery_day`'s
+demand and solar shapes, written from the same two formulas the notebook types,
+with `repr()` so the floats round-trip exactly.
 
 **Read them with `esm.data.table(name)`, never with a bare path or URL.** It
 resolves a local copy first and falls back to the published raw URL, so the

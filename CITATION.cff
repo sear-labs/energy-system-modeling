@@ -12,10 +12,12 @@ repository-code: "https://github.com/sear-labs/energy-system-modeling"
 abstract: >-
   Teaching notebooks and a Python package accompanying the open textbook
   Introduction to Energy System Modeling. Each notebook builds an energy-system
-  model by hand and checks it against the package, covering energy balances,
-  representative days, end-use disaggregation, capital cost and LCOE, pipeline
-  transport, DC power flow and locational marginal pricing, real network import,
-  material requirements, and a multi-city Texas capacity buildout.
+  model by hand and checks it against the package, covering energy arithmetic,
+  energy balances, smart-meter reading, representative days, end-use
+  disaggregation, capital cost and LCOE, merit-order dispatch with a carbon price
+  and cap, pipeline transport, DC power flow and locational marginal pricing, real
+  network import, a day with a battery, material requirements, and a multi-city
+  Texas capacity buildout.
 keywords:
   - energy system modeling
   - optimization

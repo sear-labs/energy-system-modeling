@@ -18,7 +18,13 @@ Every component, argument and formula here has already appeared:
                wholesale (the facility coda, slide 81)
     Module 3   the interconnection as the whole network (facility coda, s86)
     Module 4   state of charge (slide 22), the battery's two revenue streams
-               (slide 23 and Module 1 slide 24), single-source risk (s54)
+               (slide 23 and Module 1 slide 26), single-source risk (s54)
+(The slide numbers in that list are as first written and are NOT maintained.
+The ones the NOTEBOOK prints were renumbered on 2026-10-22 to the course's
+Fall 2026 decks - read off the course-built M5_Facility_Decision, which sets
+them from the live decks by title with `fix_xrefs.renumber()`.  That helper is
+deck tooling and does not travel; the numbers are copied, and they will go
+stale the next time a deck gains a slide.)
 The ONE thing that looks new is `n.snapshot_weightings.objective`, and it is
 just Module 1's representative days written in PyPSA. It is called out as such
 in the markdown rather than slipped in.
@@ -110,7 +116,7 @@ def verify():
     assert ROOF_MW < PEAK_MW < ICA_MW, "the roof must bind before the agreement"
     print("design check: CRF(7%%,25)=%.4f  CRF(7%%,15)=%.4f  demand charge "
           "${:,.0f}/MW-yr".format(demand) % (crf25, crf15))
-    print("              battery ${:,.0f}/MW-yr - Module 1 slide 24 quotes "
+    print("              battery ${:,.0f}/MW-yr - Module 1 slide 26 quotes "
           "$65,877 for 1 MW / 2 MWh".format(300.0 * 1000 * 2 * crf15))
 
 
@@ -225,9 +231,9 @@ L(""),
 L("# --- the quotes"),
 L("SOLAR_CAPEX = 1_100_000.0  # $/MW-dc installed, commercial rooftop"),
 L("SOLAR_FOM = 16_000.0       # $/MW-yr"),
-L("BATT_CAPEX_KWH = 300.0     # $/kWh - the same figure as Module 4 slide 23"),
+L("BATT_CAPEX_KWH = 300.0     # $/kWh - the same figure as Module 4 slide 24"),
 L("BATT_HOURS = 2.0"),
-L("RTE = 0.86                 # round trip, Module 4 slide 23"),
+L("RTE = 0.86                 # round trip, Module 4 slide 24"),
 L(""),
 L("ROOF_MW = ROOF_SQFT * W_PER_SQFT / 1e6"),
 L("DEMAND_PER_MW_YR = (TRANS_4CP + DIST_DEMAND * 12) * 1000.0"),
@@ -255,7 +261,7 @@ L(""),
 L("Module 1 forecast demand for populations and regions. This site does not "
   "forecast its demand - it **measures** it. What follows is the interval "
   "meter, reduced to two **representative days** exactly the way Module 1 "
-  "slides 13 to 16 described: a summer weekday and a winter weekday, weighted "
+  "slides 13 to 17 described: a summer weekday and a winter weekday, weighted "
   "to add up to a year."),
 L(""),
 L("Two days is a screening model, not a study. A real analysis uses all "
@@ -431,7 +437,7 @@ L("print(f'capacity factor    {capacity_factor:9.3f}')"),
 ))
 
 A(md(
-L("### Annualise the capital, then divide - Module 2 slide 22 and 23"),
+L("### Annualise the capital, then divide - Module 2 slide 25 and 26"),
 L(""),
 L("Identical arithmetic to the Houston CCGT, with two inputs changed: a "
   "25-year life instead of 30, and no fuel term at all."),
@@ -623,7 +629,7 @@ L("**The peak moved.** It was at hour 16 and it is now at hour 17, because "
   "you actually pay for."),
 L(""),
 L("Now put a price on it and stack the two streams. This is the same "
-  "two-stream structure as Module 1 slide 24 and Module 4 slide 23 - the "
+  "two-stream structure as Module 1 slide 26 and Module 4 slide 24 - the "
   "asset earns in more than one way and neither stream alone is the answer."),
 ))
 
@@ -681,12 +687,12 @@ L("      'for twelve months.')"),
 ))
 
 A(md(
-L("Module 1 slide 23 put it this way: *you cannot shave a peak you did not "
+L("Module 1 slide 25 put it this way: *you cannot shave a peak you did not "
   "see coming.* A solar array cannot promise to be there in a particular "
   "fifteen-minute interval four months from now. A battery can."),
 L(""),
 L("Which is why the battery in this notebook is **not** an arbitrage "
-  "battery. Module 4 slide 23's 100 MW unit lives on the price spread. This "
+  "battery. Module 4 slide 24's 100 MW unit lives on the price spread. This "
   "one is bought for **duration and availability in one interval** - a "
   "completely different machine sized by a completely different number, "
   "which is exactly what Module 4's facility coda said."),
@@ -788,7 +794,7 @@ L("| `Generator` \"solar\" | the rooftop array, capped at the roof |"),
 L("| `StorageUnit` | the battery, `max_hours=2` |"),
 L(""),
 L("**Two arguments carry the whole model, and both are from Module 0 slides "
-  "40 to 43:**"),
+  "43 to 47:**"),
 L(""),
 L("- `p_nom_extendable=True` on solar and the battery turns this from a "
   "dispatch model into an investment model. That is Module 2's capacity "
@@ -855,7 +861,7 @@ L(""),
 L("CRF_BATT = 0.07 * 1.07 ** 15 / (1.07 ** 15 - 1)"),
 L("BATT_ANNUAL = BATT_CAPEX_KWH * 1000.0 * BATT_HOURS * CRF_BATT"),
 L("print(f'CRF(7%, 15 yr) {CRF_BATT:.4f}   battery ${BATT_ANNUAL:,.0f} /MW-yr')"),
-L("print('Module 1 slide 24 quotes $65,877/yr for 1 MW / 2 MWh. Same number.')"),
+L("print('Module 1 slide 26 quotes $65,877/yr for 1 MW / 2 MWh. Same number.')"),
 ))
 
 A(md(
@@ -1133,7 +1139,7 @@ L("2. **The demand charge is modelled on the annual peak,** not month by "
   "so the *saving* is close to right even though neither *bill* is."),
 L("3. **The model has perfect foresight of the peak interval. You do not.** "
   "This is the single largest optimism in the whole notebook. It is also the "
-  "argument for the battery, so it cuts both ways - and Module 1 slide 23 "
+  "argument for the battery, so it cuts both ways - and Module 1 slide 25 "
   "already told you the mitigation is to curtail on every day that might "
   "contain a 4CP interval."),
 L("4. **Price is exogenous.** Tested in Part 7 and sound at 50 MW."),
@@ -1314,7 +1320,7 @@ L("- The price series is M0B Part B's output, which is a teaching stand-in "
   "for ERCOT. Its *shape* - a long cheap base and a thin, very expensive "
   "tail - is the realistic feature that matters."),
 L("- The 4CP transmission charge and the $300/kWh battery are the same "
-  "figures used on Module 1 slide 24 and Module 4 slide 23; the tariff's "
+  "figures used on Module 1 slide 26 and Module 4 slide 24; the tariff's "
   "other components are representative of a large commercial ERCOT schedule "
   "and should be replaced with your own site's rate sheet."),
 L("- Solar capacity factor here comes from a clear-sky profile with a single "

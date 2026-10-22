@@ -68,6 +68,24 @@ Gradebook*
 students/
 Student Work/
 
+# A real smart-meter export. A year of one home's 15-minute readings says when
+# its occupants wake, leave and sleep; the course's class file is one real
+# household's, and a student's own export is theirs. The smart-meter notebook
+# reads one only if the reader supplies it, and falls back to an invented house
+# (esm.meter.synthetic_export) otherwise, so nothing here ever needs one.
+IntervalData*
+*IntervalData*.csv
+*interval_data*.csv
+# Solution keys are never published, and never named to students. Both
+# cases spelled out: git matches these case-SENSITIVELY on Linux, where CI runs,
+# and case-insensitively on this Windows machine -- so `*solution_key*` alone
+# passed here and let MP4_Solution_Key.ipynb through on the runner.
+*Solution Key*
+*solution key*
+*Solution_Key*
+*solution_key*
+Solution Keys/
+
 # Canvas tooling and anything it emits. The token is read from the environment,
 # but a cached response or a dry-run log can carry course and account detail.
 canvas_*
