@@ -53,6 +53,7 @@ Run from Tools/:  python build_sb6_notebook.py
 """
 import json
 import os
+import re
 
 # tools/builders/<this file> -> tools/ -> the repository root.
 # Three levels, not two: these builders used to live one level higher,
@@ -68,9 +69,25 @@ def _id():
     return "cell-%02d" % _N[0]
 
 
+def _escape_dollars(lines):
+    # Colab and Jupyter read the text between two $ on a line as LaTeX, so
+    # "$22 ... $90" rendered as garbled maths in class (Oct 2026).
+    # Nothing in this notebook's markdown is meant as maths, so every $ is
+    # escaped, except inside `code` and ``` fences, where a backslash would show.
+    out, fence = [], False
+    for l in lines:
+        if l.lstrip().startswith("```"):
+            fence = not fence
+        elif not fence:
+            l = "".join(p if p.startswith("`") else re.sub(r"(?<!\\)\$", r"\\$", p)
+                        for p in re.split(r"(`[^`]*`)", l))
+        out.append(l)
+    return out
+
+
 def md(*lines):
     return {"cell_type": "markdown", "id": _id(), "metadata": {},
-            "source": list(lines)}
+            "source": _escape_dollars(lines)}
 
 
 def code(*lines):

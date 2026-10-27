@@ -39,10 +39,25 @@ DEFECTS FIXED (all present in the Spring notebook)
 3. Dallas LMP is $80/MWh - twice the cost of the most expensive generator
    running.  The Spring notebook never points this out.  It is now Part C.
 
-Run from Tools/:  python build_powerflow_notebook.py
+THE SLIDERS CAME BACK (27 Oct 2026)
+The Spring Part C had an interact slider on the WTX->DAL limit that redrew
+the triangle with prices and flows; this rebuild replaced it with the static
+Part E/F tables, and it was missed in class.  It returns as the Explore
+section at the very bottom, after the package check (functions live only
+there, as in 09): an AC primer slider that backs the DC/AC circuit primer
+in the course slides and Chapter 18, the grid slider, and three
+edit-and-run cells (parallel line, Line -> DC Link, solar at Dallas).
+The Part E note and Part F's closing moral were rewritten as questions at
+the same time.  Ported from the course folder's builder on 27 Oct 2026.
+
+    python tools/builders/build_powerflow_notebook.py [--run]
+    --run executes every cell and checks the Explore answers against the
+    solver (needs pypsa, gurobipy, ipywidgets: the esm venv has them)
 """
 import json
 import os
+import re
+import sys
 
 # tools/builders/<this file> -> tools/ -> the repository root.
 # Three levels, not two: these builders used to live one level higher,
@@ -59,8 +74,13 @@ def _id():
 
 
 def md(*lines):
+    # Colab and Jupyter read the text between two $ on a line as LaTeX, so
+    # "$80/MWh ... $40" rendered as garbled maths in class (Oct 2026).
+    # Nothing in this notebook's
+    # markdown is meant as maths, so every $ is escaped here.
+    esc = [re.sub(r"(?<!\\)\$", r"\\$", l) for l in lines]
     return {"cell_type": "markdown", "id": _id(), "metadata": {},
-            "source": list(lines)}
+            "source": esc}
 
 
 def code(*lines):
@@ -731,24 +751,13 @@ L("    'the sweep no longer brackets the breakpoint')"),
 ))
 
 A(md(
-L("> **The 40 MW row is infeasible, and that is the correct answer.** With "
-  "only 40 MW able to reach Dallas directly, the rest has to come from gas - "
-  "but the formula says gas would need 240 − 3*L* = 120 MW, and the plant is "
-  "only 100 MW. The model refuses -- and the cell above prints the exact "
-  "breakpoint, below which this network cannot "
-  "serve Dallas at all**, and no amount of wind in West Texas changes that."),
+L("> **The row that would not solve.** The cell above printed the breakpoint. "
+  "Did any number about the wind farm enter it? What would you have to change "
+  "to serve Dallas at a 40 MW limit?"),
 L(">"),
-L("> An infeasible model is information, not a failure. It told you the "
-  "system's breaking point without your having to search for it."),
-L(">"),
-L("> **Now read the `HOU->WTX` column against the formula.** It is +20, 0, "
-  "−20, −40 as the limit goes 50, 60, 70, 80 - exactly 120 − 2*L*."),
-L(">"),
-L("> **At a 60 MW limit the loop flow is exactly zero** - the one setting "
-  "where this network happens to behave like a simple transport model. Sitting "
-  "either side of it, power flows through Houston in *opposite directions*: "
-  "below 60 the gas plant is helping supply West Texas, above 60 the wind "
-  "farm is exporting through Houston."),
+L("> **Read the `HOU->WTX` column against 120 − 2*L*.** Which way does power "
+  "run through Houston below 60 MW, and which way above? Who is supplying "
+  "whom in each case?"),
 L(">"),
 L("> **Exercise E.1.** At a 60 MW limit, a transport model and a power-flow "
   "model give the same answer. Explain why that is a coincidence and not a "
@@ -839,10 +848,8 @@ L("Check it: 40 × (1 + 0.1/0.05) = 120. 40 × (1 + 0.1/0.1) = 80. "
 L(""),
 L("The easier the loop path, the more leverage one extra MW at Dallas has "
   "over the whole system - so the *marginal* price climbs even as the *total* "
-  "bill falls. **Total cost and marginal price answer different questions.** "
-  "Confusing the two is among the most common and most expensive mistakes in "
-  "energy analysis: a location with a high LMP is not necessarily a location "
-  "where the system is doing badly."),
+  "bill falls. Before the exercises: if someone asks whether this system is "
+  "doing well, which of those two numbers answers them?"),
 L(""),
 L("> **Exercise F.1.** You are a planner trying to relieve congestion on the "
   "West Texas to Dallas line, and you have budget for exactly one project. "
@@ -944,6 +951,393 @@ L("print(f'notebook and package agree to {worst:.1e}; every bus balances')"),
 ))
 
 
+# ================================================================ explore
+# Restored from Spring's Part C (an interact slider on the WTX->DAL limit that
+# redrew the triangle), which the Fall rebuild dropped and which was missed in
+# class.  Rules: functions only down here, Parts A-F above are untouched, and
+# every value a question names is checked by run().  `interact` with
+# continuous_update=False rather than the usual interact_manual: the grid is
+# three buses, a solve is well under a second, and the point in class is to
+# drag a limit and watch every flow and price move together.
+A(md(
+L("---"),
+L("## Explore - for your reflection"),
+L(""),
+L("Nothing above changes. The slider cells redraw when you let go of a "
+  "slider; the **edit-and-run** cells ask you to write a line or two of model "
+  "code yourself. Answer the numbered questions in your reflection."),
+L(""),
+L("### Now the streamlined version"),
+L(""),
+L("From here the model is wrapped in functions, because a slider re-runs it "
+  "every time it moves - and you have built every piece of it by hand above. "
+  "This first cell only quiets the solver, which the sliders call often."),
+))
+A(code(
+L("from ipywidgets import interact, fixed, FloatSlider"),
+L("import logging"),
+L("for name in ('pypsa', 'linopy'):"),
+L("    logging.getLogger(name).setLevel(logging.ERROR)"),
+L("# the sliders re-solve often: one silent solver set-up, no log per solve"),
+L("if SOLVER == 'gurobi':"),
+L("    QUIET = {'env': gp.Env(params={**WLS, 'OutputFlag': 0}), 'io_api': 'direct'}"),
+L("else:"),
+L("    QUIET = {'log_to_console': False}"),
+))
+A(md(
+L("### Slide it: what reactance does to the current"),
+L(""),
+L("One AC circuit: a 120 V, 60 Hz source driving a resistor *R*, a coil "
+  "*X<sub>L</sub>* and a capacitor *X<sub>C</sub>* in a row, all in ohms. The "
+  "top plot shows voltage and current, each scaled to its own peak. The bottom "
+  "one is their product, the power delivered at each instant, with its "
+  "average marked."),
+))
+A(code(
+L("import matplotlib.pyplot as plt"),
+L(""),
+L("def ac(R=1.0, X_L=10.0, X_C=0.0):"),
+L("    \"\"\"Series R, coil and capacitor on a 120 V rms, 60 Hz source.\"\"\""),
+L("    Z = complex(R, X_L - X_C)        # impedance, ohms"),
+L("    phi = np.angle(Z)                # + : current lags, - : current leads"),
+L("    I = 120 / abs(Z)                 # rms amps"),
+L("    t = np.linspace(0, 2 / 60, 500)  # two cycles, seconds"),
+L("    w = 2 * np.pi * 60"),
+L("    v = np.sin(w * t)"),
+L("    i = np.sin(w * t - phi)"),
+L("    p = (120 * np.sqrt(2) * v) * (I * np.sqrt(2) * i)"),
+L("    P, Q = 120 * I * np.cos(phi), 120 * I * np.sin(phi)"),
+L("    fig, (top, bottom) = plt.subplots(2, 1, figsize=(9, 5), sharex=True)"),
+L("    top.plot(t * 1000, v, label='voltage')"),
+L("    top.plot(t * 1000, i, '--', label='current')"),
+L("    top.set_ylabel('fraction of peak')"),
+L("    top.legend(loc='upper left', bbox_to_anchor=(1.0, 1.0))"),
+L("    bottom.plot(t * 1000, p, color='C2', label='power at each instant')"),
+L("    bottom.axhline(P, color='C2', ls=':', label='average = P')"),
+L("    bottom.axhline(0, color='black', lw=0.6)"),
+L("    bottom.set_ylabel('W')"),
+L("    bottom.set_xlabel('milliseconds')"),
+L("    bottom.legend(loc='upper left', bbox_to_anchor=(1.0, 1.0))"),
+L("    ALT_TEXT = (f'Two stacked plots over two 60 Hz cycles. Top: voltage and current, '"),
+L("                f'the current shifted {np.degrees(phi):+.0f} degrees. Bottom: power at '"),
+L("                f'each instant, averaging P = {P:,.0f} W.')"),
+L("    plt.show()"),
+L("    print(f'|Z| = {abs(Z):.1f} ohm    current {I:.1f} A rms    '"),
+L("          f'current shifted {np.degrees(phi):+.0f} degrees from voltage')"),
+L("    print(f'P = {P:,.0f} W    Q = {Q:,.0f} var')"),
+L(""),
+L("interact(ac,"),
+L("    R=FloatSlider(min=0.5, max=20, step=0.5, value=1.0, description='R ohm',"),
+L("                  continuous_update=False),"),
+L("    X_L=FloatSlider(min=0, max=20, step=0.5, value=10.0, description='coil X_L',"),
+L("                    continuous_update=False),"),
+L("    X_C=FloatSlider(min=0, max=20, step=0.5, value=0.0, description='capacitor X_C',"),
+L("                    continuous_update=False));"),
+))
+A(md(
+L("> **1.** Set the coil and the capacitor to 0. Where do the current's peaks "
+  "sit relative to the voltage's? Does the power curve ever go below zero?"),
+L(">"),
+L("> **2.** Now *R* = 1 and *X<sub>L</sub>* = 10, roughly the ratio on a "
+  "high-voltage transmission line. How far is the current shifted? For what "
+  "part of each cycle is power flowing *back* into the source, and which of "
+  "*P* and *Q* measures that back-and-forth? Which of the two does a DC power "
+  "flow keep?"),
+L(">"),
+L("> **3.** Keep *X<sub>L</sub>* at 10 and raise the capacitor until the "
+  "current is back in step with the voltage. What *X<sub>C</sub>* did it take, "
+  "and what happened to *Q* and to the current? Utilities install capacitor "
+  "banks on their lines: what would you guess they are for?"),
+L(""),
+L("### Slide it: the three-bus grid"),
+L(""),
+L("Part D's network, redrawn every time you let go of a slider. Each bus shows "
+  "its price; each line shows which way power runs and how much, against its "
+  "limit, and is marked **FULL** when it is at that limit. The title gives the "
+  "total cost and the congestion rent."),
+))
+A(code(
+L("POS = {'West Texas': (0.0, 0.0), 'Dallas': (2.0, 1.2), 'Houston': (2.0, -1.2)}"),
+L("UNDER = {'West Texas': -0.45, 'Dallas': 0.45, 'Houston': -0.45}"),
+L(""),
+L("def solve_grid(limit=70, x_loop=0.1, demand=120, extra=None):"),
+L("    \"\"\"Part D's network with your numbers. extra(k), if given, changes the"),
+L("    network before the solve. Returns the solved network, or None.\"\"\""),
+L("    k = pypsa.Network()"),
+L("    k.set_snapshots([0])"),
+L("    for b in POS:"),
+L("        k.add('Bus', b)"),
+L("    k.add('Generator', 'WTX_Wind', bus='West Texas', p_nom=150, marginal_cost=0)"),
+L("    k.add('Generator', 'HOU_Gas', bus='Houston', p_nom=100, marginal_cost=40)"),
+L("    k.add('Load', 'Dallas_Demand', bus='Dallas', p_set=demand)"),
+L("    k.add('Line', 'WTX_DAL', bus0='West Texas', bus1='Dallas', x=0.1, s_nom=limit)"),
+L("    k.add('Line', 'DAL_HOU', bus0='Dallas', bus1='Houston', x=0.1, s_nom=1000)"),
+L("    k.add('Line', 'HOU_WTX', bus0='Houston', bus1='West Texas', x=x_loop, s_nom=1000)"),
+L("    if extra is not None:"),
+L("        extra(k)"),
+L("    status, condition = k.optimize(solver_name=SOLVER, **QUIET)"),
+L("    return k if condition == 'optimal' else None"),
+))
+A(md(
+L("The drawing comes in two pieces. `draw_lines` draws each line with its "
+  "flow, limit and direction, and adds up the congestion rent as it goes: each "
+  "line's flow times the price difference across it."),
+))
+A(code(
+L("def draw_lines(ax, k, lmp):"),
+L("    \"\"\"Every Line and Link: thicker with flow, red when full. Returns the rent.\"\"\""),
+L("    # alt: no figure of its own; draw() below sets ALT_TEXT for the whole picture"),
+L("    branches = [(nm, r.bus0, r.bus1, k.lines_t.p0.iloc[0][nm], r.s_nom, '-')"),
+L("                for nm, r in k.lines.iterrows()]"),
+L("    branches += [(nm, r.bus0, r.bus1, k.links_t.p0.iloc[0][nm], r.p_nom, '--')"),
+L("                 for nm, r in k.links.iterrows()]"),
+L("    rent, seen = 0.0, {}"),
+L("    for nm, b0, b1, flow, cap, style in branches:"),
+L("        rent += flow * (lmp[b1] - lmp[b0])"),
+L("        pair = frozenset((b0, b1))"),
+L("        shift = 0.22 * seen.get(pair, 0)       # parallel branches sit side by side"),
+L("        seen[pair] = seen.get(pair, 0) + 1"),
+L("        (x0, y0), (x1, y1) = POS[b0], POS[b1]"),
+L("        length = ((x1 - x0) ** 2 + (y1 - y0) ** 2) ** 0.5"),
+L("        px, py = -(y1 - y0) / length, (x1 - x0) / length"),
+L("        x0, y0, x1, y1 = x0 + px * shift, y0 + py * shift, x1 + px * shift, y1 + py * shift"),
+L("        full = cap < 1000 and abs(flow) >= cap - 0.01"),
+L("        colour = '#b03a2e' if full else '#4d4d4d'"),
+L("        ax.plot([x0, x1], [y0, y1], style, color=colour, lw=1.5 + abs(flow) / 12, zorder=1)"),
+L("        mx, my = (x0 + x1) / 2, (y0 + y1) / 2"),
+L("        if abs(flow) > 0.05:"),
+L("            sign = 1 if flow > 0 else -1"),
+L("            dx, dy = sign * (x1 - x0) * 0.08, sign * (y1 - y0) * 0.08"),
+L("            ax.annotate('', xy=(mx + dx, my + dy), xytext=(mx - dx, my - dy), zorder=3,"),
+L("                        arrowprops=dict(arrowstyle='-|>', color=colour, lw=2,"),
+L("                                        mutation_scale=24))"),
+L("        label = f'{abs(flow):.0f} MW' if cap >= 1000 else f'{abs(flow):.0f} of {cap:.0f} MW'"),
+L("        side = 'left' if px > 0.3 else 'right' if px < -0.3 else 'center'"),
+L("        ax.text(mx + px * 0.16, my + py * 0.16, label + ('  FULL' if full else ''),"),
+L("                ha=side, va='center', fontsize=10, color=colour,"),
+L("                fontweight='bold' if full else 'normal')"),
+L("    return rent"),
+))
+A(md(
+L("Then the buses, each coloured by its price, and the slider. `grid` solves "
+  "first and draws only if some dispatch serves the load."),
+))
+A(code(
+L("def draw(k):"),
+L("    lmp = k.buses_t.marginal_price.iloc[0]"),
+L("    fig, ax = plt.subplots(figsize=(9, 6))"),
+L("    rent = draw_lines(ax, k, lmp)"),
+L("    for b, (x, y) in POS.items():"),
+L("        ax.scatter([x], [y], s=2800, c=[lmp[b]], cmap='YlOrRd', vmin=0,"),
+L("                   vmax=1.6 * max(150.0, float(lmp.max())), edgecolors='black', zorder=4)"),
+L("        ax.text(x, y, f'{b}\\n${lmp[b]:.0f}/MWh', ha='center', va='center',"),
+L("                fontsize=9, fontweight='bold', zorder=5, parse_math=False)"),
+L("        here = [f'{g}: {k.generators_t.p.iloc[0][g]:.0f} of {r.p_nom:.0f} MW'"),
+L("                for g, r in k.generators.iterrows() if r.bus == b]"),
+L("        here += [f'{d}: {r.p_set:.0f} MW' for d, r in k.loads.iterrows() if r.bus == b]"),
+L("        ax.text(x, y + UNDER[b], '\\n'.join(here), ha='center', fontsize=9,"),
+L("                va='top' if UNDER[b] < 0 else 'bottom')"),
+L("    ax.set_title(f'total cost ${k.objective:,.0f}/hr      '"),
+L("                 f'congestion rent ${rent:,.0f}/hr', parse_math=False)"),
+L("    ax.set_xlim(-1.0, 3.1)"),
+L("    ax.set_ylim(-2.1, 2.1)"),
+L("    ax.set_aspect('equal')"),
+L("    ax.axis('off')"),
+L("    ALT_TEXT = ('Three-bus triangle; bus prices ' + ', '.join(f'{b} ${lmp[b]:.0f}/MWh' for b in POS)"),
+L("                + '; line flows ' + ', '.join(f'{nm} {f:+.0f} MW' for nm, f in k.lines_t.p0.iloc[0].items()))"),
+L("    plt.show()"),
+L(""),
+L("def grid(limit=70, x_loop=0.1, demand=120, extra=None):"),
+L("    k = solve_grid(limit, x_loop, demand, extra)"),
+L("    if k is None:"),
+L("        print(f'No dispatch serves {demand:.0f} MW at Dallas with a {limit:.0f} MW '"),
+L("              'West Texas to Dallas line: the solver reports the problem infeasible.')"),
+L("        return"),
+L("    draw(k)"),
+L(""),
+L("interact(grid,"),
+L("    limit=FloatSlider(min=30, max=150, step=5, value=70,"),
+L("                      description='WTX-DAL MW', continuous_update=False),"),
+L("    x_loop=FloatSlider(min=0.05, max=0.30, step=0.05, value=0.10,"),
+L("                       description='X HOU-WTX', continuous_update=False),"),
+L("    demand=FloatSlider(min=60, max=220, step=10, value=120,"),
+L("                       description='Dallas MW', continuous_update=False),"),
+L("    extra=fixed(None));"),
+))
+A(md(
+L("> **4.** Start the limit at 150 MW and slide it down in steps of 5. At what "
+  "limit do the three prices first split apart? Before you get there, predict "
+  "it from how the 120 MW divides between the two paths when nothing binds."),
+L(">"),
+L("> **5.** Keep going down. Which way does power run on the Houston to West "
+  "Texas line at 75 MW, and at 50 MW? At what limit does the picture stop "
+  "drawing? Leave it there and try the other two sliders, one at a time. "
+  "Which brings the picture back, and in which direction did you have to "
+  "move it? Is that the direction you expected?"),
+L(">"),
+L("> **6.** Put the limit at 70 and the reactance at 0.10, then raise Dallas "
+  "demand 10 MW at a time. What is the largest demand this grid serves, and "
+  "which piece of equipment runs out first? Check it by hand with Part E's "
+  "gas formula, rewritten for any demand."),
+L(""),
+L("### Edit and run: build the parallel line"),
+L(""),
+L("Exercise F.1 asked whether to build a second West Texas to Dallas line or "
+  "make the loop path easier. Test the first. Inside `parallel_line`, write "
+  "one `k.add('Line', ...)`: a second West Texas to Dallas line with the same "
+  "`x` and `s_nom` as the first, under a new name. `grid` runs it before the "
+  "solve."),
+))
+A(code(
+L("def parallel_line(k):"),
+L("    # your one line of model code"),
+L("    pass"),
+L(""),
+L("grid(limit=70, extra=parallel_line)"),
+))
+A(md(
+L("> **7.** Before you run it: will each direct line carry 70 MW? Run it. Then "
+  "set the slider above to option (b), reactance 0.05 at a 70 MW limit. Which "
+  "project relieved the congestion, and what in the picture told you without "
+  "reading the numbers?"),
+L(""),
+L("### Edit and run: replace the line with a DC link"),
+L(""),
+L("A `Link` carries the flow you set; a `Line` carries the flow the angles "
+  "set. Swap the AC line for a DC link of the same 70 MW. Two lines of code: "
+  "`k.remove('Line', 'WTX_DAL')`, then a `k.add('Link', ...)` from West Texas "
+  "to Dallas with `p_nom=70` and `marginal_cost=0.5`, what the converter "
+  "stations charge per MWh. Left at its default, a `Link` runs one way only, "
+  "bus0 to bus1."),
+))
+A(code(
+L("def dc_link(k):"),
+L("    # your two lines of model code"),
+L("    pass"),
+L(""),
+L("grid(limit=70, extra=dc_link)"),
+))
+A(md(
+L("> **8.** The direct route has exactly the capacity it had in Part B. Before "
+  "you run it: does the gas plant still run? After: what is the Houston path "
+  "doing now? Was the 70 MW limit, on its own, what forced gas on in Part B?"),
+L(""),
+L("### Edit and run: put solar at Dallas"),
+L(""),
+L("Write your own `dallas_solar(k)` that adds a zero-cost generator at "
+  "Dallas, and call `grid(limit=70, extra=dallas_solar)`. Start at 40 MW."),
+))
+A(code(
+L("# def dallas_solar(k):"),
+L("#     ..."),
+L("#"),
+L("# grid(limit=70, extra=dallas_solar)"),
+))
+A(md(
+L("> **9.** What does 40 MW at Dallas do to every price? Shrink it until "
+  "Dallas's price comes back. How small a plant at the load does the same job "
+  "as the parallel line in question 7, and why so much smaller than the line?"),
+))
+
+
+def verify_explore():
+    """Closed forms behind the Explore questions (equal X = 0.1 unless named).
+
+    Wind W at WTX, gas G at HOU, load D at DAL.  Superposition gives the
+    direct-line flow F_wd = (2W + G)/3, so with W + G = D the limit reads
+    W <= 3L - D and gas must cover G >= 2D - 3L.
+    """
+    assert abs(2 / 3 * 120 - 80) < 1e-9          # Q4: prices split below 80
+    assert (3 * 70 + 100) / 2 == 155              # Q6: max Dallas demand at L=70
+    assert 2 * 120 - 3 * 45 > GAS_CAP             # Q5: L=45 infeasible ...
+    assert 2 * 110 - 3 * 45 <= GAS_CAP            # ... and 110 MW brings it back
+    # Q5, general X_hw = x: F_wd = (W(x+0.1) + 0.1 G)/(x+0.2)
+    def feasible(L, x, D=120.0):
+        a, b = (x + 0.1) / (x + 0.2), 0.1 / (x + 0.2)
+        w_max = (L - b * D) / (a - b)             # largest W the limit allows
+        return w_max >= 0 and D - min(w_max, WIND_CAP) <= GAS_CAP
+    assert not feasible(45, 0.05) and feasible(45, 0.30)
+    assert 2 / 3 * (120 - 15) <= 70 < 2 / 3 * (120 - 14)   # Q9: 15 MW of solar
+    assert abs(__import__("math").degrees(__import__("math").atan(10)) - 84.3) < 0.05
+    print("explore check: split below 80 MW, max demand 155 MW, 15 MW solar,"
+          " L=45 fixed by harder loop (X=0.3) not easier")
+
+
+def run(cells):
+    """Execute every code cell in one namespace (pip lines skipped), then call
+    the Explore functions at the values the questions name."""
+    import contextlib, io, logging
+    import matplotlib
+    matplotlib.use("Agg")
+    logging.disable(logging.CRITICAL)
+    ns = {}
+    for i, c in enumerate(cells):
+        if c["cell_type"] != "code":
+            continue
+        src = "\n".join(l for l in "".join(c["source"]).splitlines()
+                        if not l.strip().startswith("!"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            exec(compile(src, "<cell %d>" % i, "exec"), ns)
+    import matplotlib.pyplot as plt
+    plt.close("all")
+    solve = ns["solve_grid"]
+
+    def got(k):
+        g = k.generators_t.p.iloc[0]
+        p = k.buses_t.marginal_price.iloc[0]
+        return round(g["HOU_Gas"], 3), {b: round(p[b], 3) for b in p.index}
+
+    q = io.StringIO()
+    with contextlib.redirect_stdout(q):
+        base = got(solve(70))
+        q4_hi, q4_lo = got(solve(85)), got(solve(75))
+        q5 = [solve(L) is None for L in (50, 45)]
+        q5_x = [solve(45, x_loop=x) is not None for x in (0.05, 0.30)]
+        q5_d = solve(45, demand=110) is not None
+        q6 = [solve(70, demand=d) is not None for d in (150, 160)]
+
+        def parallel_line(k):
+            k.add("Line", "WTX_DAL_2", bus0="West Texas", bus1="Dallas",
+                  x=0.1, s_nom=70)
+
+        def dc_link(k):
+            k.remove("Line", "WTX_DAL")
+            k.add("Link", "WTX_DAL_DC", bus0="West Texas", bus1="Dallas",
+                  p_nom=70, marginal_cost=0.5)
+
+        def solar(mw):
+            return lambda k: k.add("Generator", "DAL_Solar", bus="Dallas",
+                                   p_nom=mw, marginal_cost=0)
+
+        q7 = got(solve(70, extra=parallel_line))
+        q7b = got(solve(70, x_loop=0.05))
+        q8 = got(solve(70, extra=dc_link))
+        q9 = [got(solve(70, extra=solar(s))) for s in (40, 15, 14)]
+        for f, kw in ((ns["grid"], {}), (ns["grid"], {"limit": 45}),
+                      (ns["grid"], {"extra": dc_link}), (ns["ac"], {})):
+            f(**kw)                              # the drawing code runs clean
+            plt.close("all")
+    assert base == (30.0, {"West Texas": 0.0, "Dallas": 80.0, "Houston": 40.0}), base
+    assert q4_hi[0] == 0 and len(set(q4_hi[1].values())) == 1, q4_hi
+    assert len(set(q4_lo[1].values())) == 3, q4_lo
+    assert q5 == [False, True] and q5_x == [False, True] and q5_d, (q5, q5_x, q5_d)
+    assert q6 == [True, False], q6
+    assert q7[0] == 0 and set(q7[1].values()) == {0.0}, q7
+    assert q7b[0] == 10.0 and q7b[1]["Dallas"] == 120.0, q7b
+    assert q8[0] == 0 and set(q8[1].values()) == {0.0}, q8
+    k8 = solve(70, extra=dc_link)
+    assert k8.objective >= 0 and k8.links_t.p0.iloc[0].min() >= 0, k8.objective
+    assert all(r[0] == 0 and r[1]["Dallas"] == 0 for r in q9[:2]), q9
+    assert q9[2][0] > 0 and q9[2][1]["Dallas"] > 0, q9
+    # the commented-out HiGHS line must work for the sliders too
+    ns["SOLVER"], ns["QUIET"] = "highs", {"log_to_console": False}
+    with contextlib.redirect_stdout(io.StringIO()):
+        assert got(solve(70)) == base and solve(45) is None
+    print("run: base 90/30 at $0/$80/$40; split between 85 and 75 MW; L=45 back"
+          " with X=0.3 or 110 MW; 150 ok/160 not; parallel line, DC link and"
+          " 15 MW solar clear it; 14 MW does not")
+
+
 NOTEBOOK = {
     "cells": C,
     "metadata": {
@@ -958,7 +1352,10 @@ NOTEBOOK = {
 
 if __name__ == "__main__":
     verify()
+    verify_explore()
     syntax_check(C)
+    if "--run" in sys.argv:
+        run(C)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(NOTEBOOK, f, indent=1, ensure_ascii=False)
